@@ -1,0 +1,140 @@
+{
+    "split": {
+        "train_txs": 142170,
+        "val_txs": 35897,
+        "test_txs": 36185,
+        "train_fraud_rate": 0.09084898361116972,
+        "val_fraud_rate": 0.0926818397080536,
+        "test_fraud_rate": 0.09550918889042422
+    },
+    "optimal_thresholds": {
+        "model_a": 0.3564646464646465,
+        "model_b": 0.01,
+        "model_c": 0.08919191919191918
+    },
+    "test_metrics": {
+        "naive_system": {
+            "pr_auc": 0.9810638458075372,
+            "roc_auc": 0.9978808594965616,
+            "precision": 0.7127152043144576,
+            "recall": 0.9942129629629629,
+            "f1": 0.8302525069469615,
+            "threshold": 0.5,
+            "cost_quetzales": 333300.0,
+            "tp": 3436,
+            "fp": 1385,
+            "fn": 20,
+            "tn": 31344
+        },
+        "model_a_baseline": {
+            "pr_auc": 0.9810638458075372,
+            "roc_auc": 0.9978808594965616,
+            "precision": 0.7024877650897227,
+            "recall": 0.9968171296296297,
+            "f1": 0.8241626794258373,
+            "threshold": 0.3564646464646465,
+            "cost_quetzales": 308820.0,
+            "tp": 3445,
+            "fp": 1459,
+            "fn": 11,
+            "tn": 31270
+        },
+        "model_b_sequential": {
+            "pr_auc": 0.9986089516002695,
+            "roc_auc": 0.9998417975888978,
+            "precision": 0.9707536557930259,
+            "recall": 0.9988425925925926,
+            "f1": 0.9845978322875071,
+            "threshold": 0.01,
+            "cost_quetzales": 35520.0,
+            "tp": 3452,
+            "fp": 104,
+            "fn": 4,
+            "tn": 32625
+        },
+        "model_c_hybrid": {
+            "pr_auc": 0.9986226235857345,
+            "roc_auc": 0.9998566767225917,
+            "precision": 0.9743155517922665,
+            "recall": 0.9988425925925926,
+            "f1": 0.9864266323760538,
+            "threshold": 0.08919191919191918,
+            "cost_quetzales": 33180.0,
+            "tp": 3452,
+            "fp": 91,
+            "fn": 4,
+            "tn": 32638
+        },
+        "model_b_shuffled": {
+            "pr_auc": 0.3163684260935989,
+            "roc_auc": 0.6994032362283761,
+            "precision": 0.4536456614978555,
+            "recall": 0.3978587962962963,
+            "f1": 0.42392477262216743,
+            "threshold": 0.01,
+            "cost_quetzales": 9038280.0,
+            "tp": 1375,
+            "fp": 1656,
+            "fn": 2081,
+            "tn": 31073
+        },
+        "model_c_shuffled": {
+            "pr_auc": 0.46615630368041033,
+            "roc_auc": 0.9290224964367878,
+            "precision": 0.44879725085910654,
+            "recall": 0.37789351851851855,
+            "f1": 0.4103047439522463,
+            "threshold": 0.08919191919191918,
+            "cost_quetzales": 9318720.0,
+            "tp": 1306,
+            "fp": 1604,
+            "fn": 2150,
+            "tn": 31125
+        }
+    },
+    "falsification_drops": {
+        "model_b_prauc_drop": 0.6822405255066706,
+        "model_b_f1_drop": 0.5606730596653396
+    },
+    "fraud_mechanisms_breakdown": [
+        {
+            "mechanism": "probing_drainage",
+            "total_cases": 2127,
+            "recall_a": 1.0,
+            "recall_b": 0.999529854254819,
+            "recall_c": 0.999059708509638
+        },
+        {
+            "mechanism": "channel_velocity_shift",
+            "total_cases": 1088,
+            "recall_a": 1.0,
+            "recall_b": 1.0,
+            "recall_c": 1.0
+        },
+        {
+            "mechanism": "amount_spike",
+            "total_cases": 241,
+            "recall_a": 0.9543568464730291,
+            "recall_b": 0.9875518672199171,
+            "recall_c": 0.991701244813278
+        },
+        {
+            "mechanism": "legit_travel_outlier",
+            "total_cases": 67,
+            "recall_a": 0.0,
+            "recall_b": 0.0,
+            "recall_c": 0.0
+        }
+    ],
+    "economic_impact_quetzales": {
+        "cost_fn": 4200.0,
+        "cost_fp": 180.0,
+        "test_cost_naive": 333300.0,
+        "test_cost_a": 308820.0,
+        "test_cost_b": 35520.0,
+        "test_cost_c": 33180.0,
+        "monthly_savings_b_vs_a": 546600.0,
+        "monthly_savings_c_vs_a": 551280.0,
+        "monthly_savings_b_vs_naive": 595560.0
+    }
+}
