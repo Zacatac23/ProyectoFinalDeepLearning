@@ -29,12 +29,14 @@ from fraude.training import (DEVICE, TransactionSequenceDataset, compute_metrics
 WEIGHT_FILES = {'a': 'modelo_a_baseline.pt', 'b': 'modelo_b_lstm.pt', 'c': 'modelo_c_hybrid.pt'}
 MODEL_TYPE = {'a': 'tab', 'b': 'seq', 'c': 'hybrid'}
 
-# Valores del README del Proyecto 1 (conjunto de prueba)
-EXPECTED = {
-    'a': {'threshold': 0.22, 'pr_auc': 0.542, 'roc_auc': 0.812, 'f1': 0.528, 'recall': 0.654, 'precision': 0.442, 'cost_quetzales': 91140.0},
-    'b': {'threshold': 0.20, 'pr_auc': 0.836, 'roc_auc': 0.958, 'f1': 0.768, 'recall': 0.832, 'precision': 0.713, 'cost_quetzales': 67680.0},
-    'c': {'threshold': 0.21, 'pr_auc': 0.841, 'roc_auc': 0.961, 'f1': 0.773, 'recall': 0.845, 'precision': 0.712, 'cost_quetzales': 67020.0},
-}
+METRICS_FILE = 'metricas_completas.json'
+METRICS_KEYS = {'a': 'model_a_baseline', 'b': 'model_b_sequential', 'c': 'model_c_hybrid'}
+
+
+def load_expected(weights_dir: Path) -> dict:
+    """Metricas de prueba guardadas junto con los pesos."""
+    saved = json.loads((weights_dir / METRICS_FILE).read_text(encoding='utf-8'))['test_metrics']
+    return {name: saved[key] for name, key in METRICS_KEYS.items()}
 
 
 def load_state_dict(path: Path) -> dict:
@@ -54,7 +56,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--weights-dir', type=Path, default=Path('artefactos'))
     parser.add_argument('--out', type=Path, default=Path('serving'))
-    parser.add_argument('--tol-prauc', type=float, default=0.02, help='Tolerancia de AUC-PR frente al README.')
+    parser.add_argument('--tol-prauc', type=float, default=0.02, help='Tolerancia de AUC-PR frente a las metricas guardadas.')
     parser.add_argument('--bench', type=int, default=200, help='Peticiones para medir latencia.')
     args = parser.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
@@ -74,7 +76,8 @@ def main() -> None:
     test_loader = DataLoader(TransactionSequenceDataset(pipeline.build_sequence_dataset(test_df)),
                              batch_size=128, shuffle=False)
 
-    print('2) Cargando pesos y verificando contra las metricas reportadas...')
+    print('2) Cargando pesos y verificando contra las metricas guardadas...')
+    expected = load_expected(args.weights_dir)
     thresholds, report, all_ok = {}, {}, True
     for name, filename in WEIGHT_FILES.items():
         path = args.weights_dir / filename
@@ -94,15 +97,15 @@ def main() -> None:
         test_preds, test_y, _ = predict_dataset(model, test_loader, model_type=MODEL_TYPE[name])
         metrics = compute_metrics(test_y, test_preds, threshold=thr)
         thresholds[name] = {'threshold': thr, 'val_cost_quetzales': float(val_cost)}
-        exp = EXPECTED[name]
+        exp = expected[name]
         diffs = {k: metrics[k] - exp[k] for k in ('pr_auc', 'roc_auc', 'f1', 'recall', 'precision', 'cost_quetzales')}
         ok = abs(diffs['pr_auc']) <= args.tol_prauc
         all_ok &= ok
-        report[name] = {'test_metrics': metrics, 'expected_readme': exp, 'difference': diffs, 'within_tolerance': ok}
-        print(f'   Modelo {name.upper()}: umbral {thr:.2f} (README {exp["threshold"]:.2f}) | '
-              f'AUC-PR {metrics["pr_auc"]:.3f} (README {exp["pr_auc"]:.3f}) | '
+        report[name] = {'test_metrics': metrics, 'expected_saved': exp, 'difference': diffs, 'within_tolerance': ok}
+        print(f'   Modelo {name.upper()}: umbral {thr:.2f} (guardado {exp["threshold"]:.2f}) | '
+              f'AUC-PR {metrics["pr_auc"]:.3f} (guardado {exp["pr_auc"]:.3f}) | '
               f'recall {metrics["recall"]:.3f} | costo Q{metrics["cost_quetzales"]:,.0f} '
-              f'(README Q{exp["cost_quetzales"]:,.0f}) -> {"OK" if ok else "FUERA DE TOLERANCIA"}')
+              f'(guardado Q{exp["cost_quetzales"]:,.0f}) -> {"OK" if ok else "FUERA DE TOLERANCIA"}')
         torch.save({k: v.cpu() for k, v in model.state_dict().items()}, args.out / f'model_{name}.pt')
 
     (args.out / 'thresholds.json').write_text(json.dumps(thresholds, indent=2), encoding='utf-8')
@@ -123,8 +126,8 @@ def main() -> None:
     (args.out / 'reproduced_metrics.json').write_text(json.dumps(out, indent=2), encoding='utf-8')
     print(f'\nPaquete de servicio guardado en {args.out}/')
     if not all_ok:
-        print('AVISO: algun modelo no reproduce las metricas del README. Revisen que los .pt sean los '
-              'de la corrida reportada o reporten los nuevos valores.')
+        print('AVISO: algun modelo no reproduce sus metricas guardadas. Revisen que los .pt y '
+              f'{METRICS_FILE} sean de la misma corrida.')
 
 
 if __name__ == '__main__':
