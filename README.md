@@ -2,10 +2,10 @@
 
 Universidad del Valle · Deep Learning y Sistemas Inteligentes · 2026
 
-**Integrantes:** Jonathan Zacarías (231104) · Luis [APELLIDO] (23353) · [TERCER INTEGRANTE]
+**Integrantes:** Jonathan Zacarías (231104) · Luis González (23353) · Diego López (23242)
 
-**Servicio:** [ENLACE PÚBLICO] · **Presentación:** [`presentacion_final.pdf`](presentacion_final.pdf)
-**Modelo de origen:** Proyecto 1, *Monitoreo Transaccional* (notebook `proyecto1_monitoreo_transaccional.ipynb`).
+**Servicio:** <https://fraude-api-t2ww.onrender.com> · **Presentación:** [`presentacion_final.pdf`](presentacion_final.pdf)
+**Modelo de origen:** Proyecto 1, *Monitoreo Transaccional* (notebook `proyecto1_monitoreo_transaccional.ipynb`). [AGREGAR el notebook al repositorio.]
 
 ---
 
@@ -28,8 +28,8 @@ Universidad del Valle · Deep Learning y Sistemas Inteligentes · 2026
 | Elegir el Proyecto 1 y revisar notebook y contrato | 7 nov | [NOMBRE] | Hecho |
 | Extraer el pipeline a un paquete y serializar escaladores y encoders | 7 nov | [NOMBRE] | Hecho |
 | API (FastAPI), política de decisión y registro de uso | 7 nov | [NOMBRE] | Hecho |
-| Verificar pesos y métricas con `export_artifacts.py` | [FECHA] | [NOMBRE] | [ESTADO] |
-| Publicar el servicio | [FECHA] | [NOMBRE] | [ESTADO] |
+| Verificar pesos y métricas con `export_artifacts.py` | 8 nov | Jonathan Zacarías | Hecho |
+| Registro persistente, integración continua y publicación en Render | 8 nov | Diego López | Hecho |
 | Pruebas con personas ajenas y capturas | [FECHA] | Todos | [ESTADO] |
 | PDF de presentación y ensayo | [FECHA] | Todos | [ESTADO] |
 
@@ -39,6 +39,7 @@ Presentación: 9 de noviembre. Entrega límite: 15 de noviembre, 23:59.
 
 **Datos**
 - Son **sintéticos**: 1200 clientes, 90 días, semilla 42, con mecanismos de fraude inyectados (`probing_drainage`, `channel_velocity_shift`, `amount_spike`) y un caso legítimo difícil (`legit_travel_outlier`). No se probó con datos reales.
+- El generador usa `fraud_rate=0.035` por evento, pero un evento puede producir hasta 4 filas fraudulentas. Por eso entre 9,1% y 9,6% de las filas son fraude.
 - Partición temporal: días 1-60 entrenamiento, 61-75 validación, 76-90 prueba. Escaladores y encoders se ajustan solo con entrenamiento.
 
 **Costos y usuario**
@@ -47,7 +48,7 @@ Presentación: 9 de noviembre. Entrega límite: 15 de noviembre, 23:59.
 
 **Entorno**
 - Inferencia en CPU, una transacción por petición.
-- Tiempos medidos en la máquina de pruebas del equipo, no en el servidor final.
+- Servicio en el plan gratuito de Render (0,1 CPU y 512 MB). Tras 15 minutos sin tráfico se duerme y tarda cerca de un minuto en despertar.
 
 ## 4. Modelo planteado
 
@@ -66,7 +67,9 @@ Presentación: 9 de noviembre. Entrega límite: 15 de noviembre, 23:59.
 
 **Limitaciones del modelo que conocemos** (encontradas al llevarlo a producción):
 - `amount_to_hist_avg_ratio` quedó contaminada: la primera transacción de cada cliente tiene promedio histórico 0, lo que genera razones del orden de 10⁹ (1200 filas de 142 170 en entrenamiento). El escalador resultante tiene escala ≈ 1,4 × 10⁷, así que esa variable es prácticamente constante para el modelo. Afecta a la línea base A y a la rama agregada de C.
-- En el notebook, las ventanas secuenciales de validación y prueba se construyen por separado: en el 16,6% de las transacciones de prueba (5997 de 36 185) la ventana queda cortada por el límite del periodo. En producción la ventana es completa, igual que en entrenamiento.
+- En el notebook, las ventanas secuenciales de validación y prueba se construyen por separado: en el 16,6% de las transacciones de prueba (5997 de 36 185) la ventana queda cortada por el límite del periodo. En producción la ventana es completa, igual que en entrenamiento. Con historial completo, C cuesta Q24 780 en prueba, frente a Q33 180 con las ventanas cortadas.
+- Los puntajes están saturados: con historial completo, el 98,3% de los puntajes de C en prueba es menor que 0,001 o mayor que 0,999. El puntaje ordena el riesgo, pero no es una probabilidad calibrada.
+- La política de tres niveles se comporta casi como una decisión binaria: en prueba, C aprueba el 90,2%, bloquea el 9,8% y solo envía el 0,02% a autenticación reforzada.
 
 ## 5. Validación de hipótesis
 
@@ -75,19 +78,22 @@ Presentación: 9 de noviembre. Entrega límite: 15 de noviembre, 23:59.
 **Hipótesis.** El orden de las transacciones aporta valor: el modelo secuencial supera a las variables agregadas.
 **Criterio de éxito** (tomado del notebook): ΔAUC-PR de C frente a A ≥ +0,05 y ahorro ≥ Q15 000 al mes (o 15%). [CONFIRMAR la fecha en que se definió, que debe ser anterior al entrenamiento.]
 
-Resultados en prueba, tal como los reporta el Proyecto 1 [VERIFICAR con `serving/reproduced_metrics.json`]:
+Resultados en prueba con los pesos de `artefactos/`. `export_artifacts.py` los reproduce y coinciden con `artefactos/metricas_completas.json`:
 
 | Sistema | Umbral | AUC-PR | AUC-ROC | F1 | Recall | Precisión | Costo en prueba (15 días) |
 |---|---|---|---|---|---|---|---|
-| Ingenuo (A a 0,50) | 0,50 | 0,542 | 0,812 | 0,447 | 32,1% | 73,5% | Q114 840 |
-| A (agregado) | 0,22 | 0,542 | 0,812 | 0,528 | 65,4% | 44,2% | Q91 140 |
-| B (secuencial) | 0,20 | 0,836 | 0,958 | 0,768 | 83,2% | 71,3% | Q67 680 |
-| C (híbrido) | 0,21 | 0,841 | 0,961 | 0,773 | 84,5% | 71,2% | Q67 020 |
+| Ingenuo (A a 0,50) | 0,50 | 0,9811 | 0,9979 | 0,830 | 99,4% | 71,3% | Q333 300 |
+| A (agregado) | 0,36 | 0,9811 | 0,9979 | 0,824 | 99,7% | 70,2% | Q308 820 |
+| B (secuencial) | 0,01 | 0,9986 | 0,9998 | 0,985 | 99,9% | 97,1% | Q35 520 |
+| C (híbrido) | 0,09 | 0,9986 | 0,9999 | 0,986 | 99,9% | 97,4% | Q33 180 |
 
-- **Prueba de falsificación (permutación del orden):** según el informe del Proyecto 1, el AUC-PR de B cae 36,6% al barajar la secuencia.
-- **Ahorro mensual frente a A:** B Q46 920 y C Q48 240 (la columna del informe original mezclaba bases).
+- **Resultado frente al criterio:** el ΔAUC-PR de C frente a A es +0,018, menor que +0,05, así que esa parte **no se cumple**. El ahorro de C frente a A es de Q551 280 al mes, así que esa parte sí se cumple. Como el criterio exige ambas, la hipótesis **no se cumple tal como fue planteada**. El valor del modelo secuencial aparece en el costo: frente a A, C baja los falsos positivos de 1459 a 91 y los falsos negativos de 11 a 4.
+- **Prueba de falsificación (permutación del orden):** al barajar la secuencia, el AUC-PR de B cae de 0,999 a 0,316 y el de C a 0,466.
+- **Ahorro mensual frente a A:** B Q546 600 y C Q551 280.
+- **Discrepancia con el informe del Proyecto 1.** El informe reportaba AUC-PR de 0,542 (A), 0,836 (B) y 0,841 (C). Los pesos de este repositorio no reproducen esos valores. Aquí se reporta lo que se puede verificar. [EXPLICAR de dónde salieron las cifras del informe.]
+- **Cómo leer estos números.** Los datos sintéticos son fáciles de separar: hasta el modelo agregado A llega a 0,98. Estos resultados no anticipan el desempeño con datos reales.
 
-**Hipótesis C frente a B.** La hipótesis declarada en el notebook pedía que C superara a B en "X puntos" de AUC-PR en validación, y X nunca se fijó. En prueba la mejora es de 0,005. No se sostiene con ningún umbral razonable, así que **B es una alternativa casi equivalente y más simple**. [DECIDIR Y EXPLICAR por qué se sirve C o B.]
+**Hipótesis C frente a B.** La hipótesis declarada en el notebook pedía que C superara a B en "X puntos" de AUC-PR en validación, y X nunca se fijó. En prueba, la mejora de AUC-PR es de 0,00001. En costo, B gana en validación (Q19 140 frente a Q26 820) y C gana en prueba (Q33 180 frente a Q35 520); son diferencias de pocos casos. **B es una alternativa casi equivalente y más simple.** [DECIDIR Y EXPLICAR por qué se sirve C o B.]
 
 ### 5.2 Hipótesis de servicio
 
@@ -95,10 +101,10 @@ Criterios [FIJAR ANTES DE MEDIR y conservar la fecha]:
 
 | Hipótesis | Métrica | Criterio de éxito | Resultado |
 |---|---|---|---|
-| La API puntúa igual que el notebook | Error máximo entre ambos | ≤ 1e-5 | [VALOR de `test_model_equivalence`] |
+| La API puntúa igual que el notebook | Error máximo entre ambos | ≤ 1e-5 | **Cumplido:** 150 transacciones por modelo, error 5,96e-08, con pesos aleatorios de semilla fija |
 | La API construye las mismas variables | Error máximo en variables y ids | ≤ 1e-4, 0 ids distintos | **Cumplido:** 400 transacciones de prueba, error 0 |
-| Los pesos reproducen lo reportado | AUC-PR de prueba frente al informe | Diferencia ≤ 0,02 | [VALOR de `export_artifacts`] |
-| Latencia en línea | p95 de extremo a extremo | < 25 ms (contrato original) | [VALOR p95 local] / [VALOR en el servidor] |
+| Los pesos reproducen lo reportado | AUC-PR de prueba frente al informe | Diferencia ≤ 0,02 | Frente a `metricas_completas.json`: **cumplido**, diferencia 0. Frente al informe del Proyecto 1: **no cumplido**, diferencias de 0,158 a 0,439 |
+| Latencia en línea | p95 de extremo a extremo | < 25 ms (contrato original) | **No cumplido:** 362 ms desde Guatemala hasta Render (50 peticiones, 8 nov 2026). El modelo por sí solo tarda 1,9 ms en p95 |
 
 ### 5.3 Línea base
 
@@ -140,10 +146,10 @@ flowchart LR
 
 ## 7. Evidencias del pase a producción
 
-- **Servicio:** [ENLACE Y FECHA/HORA DE LA PRUEBA]
+- **Servicio:** <https://fraude-api-t2ww.onrender.com>, verificado el 8 de noviembre de 2026 a las 21:07, hora de Guatemala, con `scripts/smoke_test.py`.
 - **Capturas** (`evidencias/`): página de demostración con el ejemplo normal y el sospechoso, respuesta de `/health`, `/stats` tras varias peticiones, acceso desde un dispositivo ajeno al equipo.
 - **Registro de uso:** `evidencias/requests.csv`, descargado de `GET /logs.csv` [N peticiones, % por decisión, latencia p50 y p95].
-- **Pruebas:** `test_features_equivalence`, `test_model_equivalence`, `test_api`, `export_artifacts.py` [RESULTADOS Y CAPTURAS].
+- **Pruebas:** `test_features_equivalence`, `test_model_equivalence` y `test_api` pasan. `export_artifacts.py` reproduce `metricas_completas.json`. La imagen de Docker pasa en [GitHub Actions](https://github.com/Zacatac23/ProyectoFinalDeepLearning/actions) con los límites de Render (0,1 CPU y 512 MB) y un Postgres de prueba. [AGREGAR CAPTURAS.]
 - **Prueba con persona ajena al equipo:** [NOMBRE, FECHA, QUÉ HIZO].
 
 ---
@@ -160,19 +166,19 @@ Respuesta:
 ```json
 {
   "tx_id": "DEMO_SONDEO",
-  "fraud_risk_score": 0.0,
+  "fraud_risk_score": 1.0,
   "decision": "BLOCK_TRANSACTION",
   "recommended_action": "LOCK_CARD_AND_ALERT_ANALYST",
   "model": "c",
-  "review_threshold": 0.21,
+  "review_threshold": 0.08919191919191918,
   "block_threshold": 0.65,
-  "latency_ms": 0.0,
+  "latency_ms": 0.941,
   "history_used": 6,
   "warnings": []
 }
 ```
 
-(Los valores del ejemplo son ilustrativos.) `GET /ejemplos` devuelve dos peticiones de ejemplo; `GET /health` y `GET /stats` describen el estado del servicio, y `GET /logs.csv` descarga el registro de uso.
+`latency_ms` mide solo el cálculo de variables y del modelo, sin la red. `GET /ejemplos` devuelve dos peticiones de ejemplo; `GET /health` y `GET /stats` describen el estado del servicio, y `GET /logs.csv` descarga el registro de uso.
 
 **Contrato de entrada.** `current_transaction` (obligatoria), `recent_history` (se recomiendan 6 transacciones previas, de más antigua a más reciente o en cualquier orden) y `aggregated_profile.hist_avg_amount` (opcional; si falta se estima con el historial recibido). Otros campos se ignoran. Si el historial tiene menos de 6 transacciones, la respuesta incluye una advertencia.
 
@@ -183,7 +189,7 @@ python -m venv .venv
 .venv\Scripts\Activate.ps1
 python -m pip install -r requirements-export.txt
 
-# 1. Copiar aquí la carpeta artefactos/ del Proyecto 1 (modelo_a_baseline.pt, modelo_b_lstm.pt, modelo_c_hybrid.pt)
+# 1. Exportar el paquete de servicio desde los pesos de artefactos/
 python export_artifacts.py --weights-dir artefactos --out serving
 
 # 2. Pruebas
@@ -233,6 +239,5 @@ proyecto1_monitoreo_transaccional.ipynb   notebook original
 
 ## Uso de inteligencia artificial
 
-**Proyecto 1.** Asistencia en visualizaciones, tablas y la formulación de costos asimétricos. Los autores verificaron el protocolo temporal, las pruebas de falsificación, los hiperparámetros y la interpretación financiera.
+Se usaron asistentes de IA para programar y revisar la API, las pruebas y la configuración de despliegue, y para revisar las métricas y redactar la documentación. Las decisiones de alcance, modelo e infraestructura fueron del equipo.
 
-**Proyecto final.** Claude para extraer el pipeline del notebook, escribir la API, las pruebas, el Dockerfile y este README, y para revisar el notebook (de ahí salen las limitaciones de la sección 4). [AJUSTAR.] Cada integrante puede explicar el código y las decisiones.
