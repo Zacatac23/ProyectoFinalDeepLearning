@@ -54,7 +54,7 @@ Presentación: 9 de noviembre. Entrega límite: 15 de noviembre, 23:59.
 
 **Proyecto de origen.** Proyecto 1. Tres modelos entrenados en PyTorch: A (MLP sobre 12 variables agregadas), B (LSTM con embeddings sobre las últimas K=6 transacciones) y C (red híbrida de dos ramas que combina B y A).
 
-**Modelo en producción.** Apuesta C (`HybridDualBranchNet`). Se puede servir B con `MODEL=b` sin cambiar nada más.
+**Modelo en producción.** B (`SequentialFraudLSTM`), por las razones de la sección 5.1. Se puede servir C con `MODEL=c` sin cambiar nada más.
 
 **Cambios para producción** (no se reentrenó ningún modelo):
 
@@ -67,9 +67,9 @@ Presentación: 9 de noviembre. Entrega límite: 15 de noviembre, 23:59.
 
 **Limitaciones del modelo que conocemos** (encontradas al llevarlo a producción):
 - `amount_to_hist_avg_ratio` quedó contaminada: la primera transacción de cada cliente tiene promedio histórico 0, lo que genera razones del orden de 10⁹ (1200 filas de 142 170 en entrenamiento). El escalador resultante tiene escala ≈ 1,4 × 10⁷, así que esa variable es prácticamente constante para el modelo. Afecta a la línea base A y a la rama agregada de C.
-- En el notebook, las ventanas secuenciales de validación y prueba se construyen por separado: en el 16,6% de las transacciones de prueba (5997 de 36 185) la ventana queda cortada por el límite del periodo. En producción la ventana es completa, igual que en entrenamiento. Con historial completo, C cuesta Q24 780 en prueba, frente a Q33 180 con las ventanas cortadas.
-- Los puntajes están saturados: con historial completo, el 98,3% de los puntajes de C en prueba es menor que 0,001 o mayor que 0,999. El puntaje ordena el riesgo, pero no es una probabilidad calibrada.
-- La política de tres niveles se comporta casi como una decisión binaria: en prueba, C aprueba el 90,2%, bloquea el 9,8% y solo envía el 0,02% a autenticación reforzada.
+- En el notebook, las ventanas secuenciales de validación y prueba se construyen por separado: en el 16,6% de las transacciones de prueba (5997 de 36 185) la ventana queda cortada por el límite del periodo. En producción la ventana es completa, igual que en entrenamiento. Con historial completo, B cuesta Q31 140 en prueba, frente a Q35 520 con las ventanas cortadas.
+- Los puntajes están saturados: con historial completo, el 97,8% de los puntajes de B en prueba es menor que 0,001 o mayor que 0,999. El puntaje ordena el riesgo, pero no es una probabilidad calibrada.
+- La política de tres niveles se comporta casi como una decisión binaria: en prueba, B aprueba el 90,2%, bloquea el 9,8% y solo envía el 0,02% a autenticación reforzada.
 
 ## 5. Validación de hipótesis
 
@@ -87,13 +87,15 @@ Resultados en prueba con los pesos de `artefactos/`. `export_artifacts.py` los r
 | B (secuencial) | 0,01 | 0,9986 | 0,9998 | 0,985 | 99,9% | 97,1% | Q35 520 |
 | C (híbrido) | 0,09 | 0,9986 | 0,9999 | 0,986 | 99,9% | 97,4% | Q33 180 |
 
-- **Resultado frente al criterio:** el ΔAUC-PR de C frente a A es +0,018, menor que +0,05, así que esa parte **no se cumple**. El ahorro de C frente a A es de Q551 280 al mes, así que esa parte sí se cumple. Como el criterio exige ambas, la hipótesis **no se cumple tal como fue planteada**. El valor del modelo secuencial aparece en el costo: frente a A, C baja los falsos positivos de 1459 a 91 y los falsos negativos de 11 a 4.
+- **Resultado frente al criterio:** el ΔAUC-PR de C frente a A es +0,018, menor que +0,05, así que esa parte **no se cumple**. El ahorro de C frente a A es de Q551 280 al mes, así que esa parte sí se cumple. Como el criterio exige ambas, la hipótesis **no se cumple tal como fue planteada**. Con B, el modelo servido, el resultado es el mismo: ΔAUC-PR de +0,018 y ahorro de Q546 600 al mes. El valor del modelo secuencial aparece en el costo: frente a A, B baja los falsos positivos de 1459 a 104 y los falsos negativos de 11 a 4.
 - **Prueba de falsificación (permutación del orden):** al barajar la secuencia, el AUC-PR de B cae de 0,999 a 0,316 y el de C a 0,466.
 - **Ahorro mensual frente a A:** B Q546 600 y C Q551 280.
 - **Discrepancia con el informe del Proyecto 1.** El informe reportaba AUC-PR de 0,542 (A), 0,836 (B) y 0,841 (C). Los pesos de este repositorio no reproducen esos valores. Aquí se reporta lo que se puede verificar. [EXPLICAR de dónde salieron las cifras del informe.]
 - **Cómo leer estos números.** Los datos sintéticos son fáciles de separar: hasta el modelo agregado A llega a 0,98. Estos resultados no anticipan el desempeño con datos reales.
 
-**Hipótesis C frente a B.** La hipótesis declarada en el notebook pedía que C superara a B en "X puntos" de AUC-PR en validación, y X nunca se fijó. En prueba, la mejora de AUC-PR es de 0,00001. En costo, B gana en validación (Q19 140 frente a Q26 820) y C gana en prueba (Q33 180 frente a Q35 520); son diferencias de pocos casos. **B es una alternativa casi equivalente y más simple.** [DECIDIR Y EXPLICAR por qué se sirve C o B.]
+**Hipótesis C frente a B.** La hipótesis declarada en el notebook pedía que C superara a B en "X puntos" de AUC-PR en validación, y X nunca se fijó. En prueba, la mejora de AUC-PR es de 0,00001. En costo, B gana en validación (Q19 140 frente a Q26 820) y C gana en prueba (Q33 180 frente a Q35 520); son diferencias de pocos casos. 
+
+**Decisión: se sirve B.** Un modelo se elige con validación, no con prueba, y en validación B tiene el menor costo. Los dos empatan en AUC-PR de prueba, y B es más simple: no usa la rama agregada, afectada por la variable contaminada de la sección 4. La ventaja de C en prueba, de Q2 340, equivale a pocos casos y no puede usarse para elegir. **Riesgo aceptado:** el umbral óptimo de B (0,01) está en el mínimo de la búsqueda, así que B es sensible a cambios pequeños en los puntajes. Por eso se vigila la proporción de bloqueos en `GET /stats`.
 
 ### 5.2 Hipótesis de servicio
 
@@ -104,7 +106,7 @@ Criterios [FIJAR ANTES DE MEDIR y conservar la fecha]:
 | La API puntúa igual que el notebook | Error máximo entre ambos | ≤ 1e-5 | **Cumplido:** 150 transacciones por modelo, error 5,96e-08, con pesos aleatorios de semilla fija |
 | La API construye las mismas variables | Error máximo en variables y ids | ≤ 1e-4, 0 ids distintos | **Cumplido:** 400 transacciones de prueba, error 0 |
 | Los pesos reproducen lo reportado | AUC-PR de prueba frente al informe | Diferencia ≤ 0,02 | Frente a `metricas_completas.json`: **cumplido**, diferencia 0. Frente al informe del Proyecto 1: **no cumplido**, diferencias de 0,158 a 0,439 |
-| Latencia en línea | p95 de extremo a extremo | < 25 ms (contrato original) | **No cumplido:** 362 ms desde Guatemala hasta Render (50 peticiones, 8 nov 2026). El modelo por sí solo tarda 1,9 ms en p95 |
+| Latencia en línea | p95 de extremo a extremo | < 25 ms (contrato original) | **No cumplido:** 371 ms desde Guatemala hasta Render (50 peticiones, 8 nov 2026). El modelo por sí solo tarda 1,4 ms en p95 |
 
 ### 5.3 Línea base
 
@@ -146,7 +148,7 @@ flowchart LR
 
 ## 7. Evidencias del pase a producción
 
-- **Servicio:** <https://fraude-api-t2ww.onrender.com>, verificado el 8 de noviembre de 2026 a las 21:07, hora de Guatemala, con `scripts/smoke_test.py`.
+- **Servicio:** <https://fraude-api-t2ww.onrender.com>, verificado el 8 de noviembre de 2026 a las 21:37, hora de Guatemala, con `scripts/smoke_test.py`.
 - **Capturas** (`evidencias/`): página de demostración con el ejemplo normal y el sospechoso, respuesta de `/health`, `/stats` tras varias peticiones, acceso desde un dispositivo ajeno al equipo.
 - **Registro de uso:** `evidencias/requests.csv`, descargado de `GET /logs.csv` [N peticiones, % por decisión, latencia p50 y p95].
 - **Pruebas:** `test_features_equivalence`, `test_model_equivalence` y `test_api` pasan. `export_artifacts.py` reproduce `metricas_completas.json`. La imagen de Docker pasa en [GitHub Actions](https://github.com/Zacatac23/ProyectoFinalDeepLearning/actions) con los límites de Render (0,1 CPU y 512 MB) y un Postgres de prueba. [AGREGAR CAPTURAS.]
@@ -166,13 +168,13 @@ Respuesta:
 ```json
 {
   "tx_id": "DEMO_SONDEO",
-  "fraud_risk_score": 1.0,
+  "fraud_risk_score": 0.999999,
   "decision": "BLOCK_TRANSACTION",
   "recommended_action": "LOCK_CARD_AND_ALERT_ANALYST",
-  "model": "c",
-  "review_threshold": 0.08919191919191918,
+  "model": "b",
+  "review_threshold": 0.01,
   "block_threshold": 0.65,
-  "latency_ms": 0.941,
+  "latency_ms": 1.026,
   "history_used": 6,
   "warnings": []
 }
