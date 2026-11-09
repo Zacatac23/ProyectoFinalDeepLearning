@@ -5,8 +5,7 @@ Universidad del Valle · Deep Learning y Sistemas Inteligentes · 2026
 **Integrantes:** Jonathan Zacarías (231104) · Luis Gilberto González (23353) · Diego López (23242)
 
 **Servicio:** <https://fraude-api-t2ww.onrender.com> · **Presentación:** [`presentacion_final.pdf`](presentacion_final.pdf)
-**Modelo de origen:** Proyecto 1, *Monitoreo Transaccional* (notebook `proyecto1_monitoreo_transaccional.ipynb`). [AGREGAR el notebook al repositorio.]
-
+**Modelo de origen:** Proyecto 1, *Monitoreo Transaccional* (notebook `proyecto1_monitoreo_transaccional.ipynb`).
 ---
 
 ## 1. Problemática
@@ -52,7 +51,7 @@ Presentación: 9 de noviembre. Entrega límite: 15 de noviembre, 23:59.
 
 ## 4. Modelo planteado
 
-**Proyecto de origen.** Proyecto 1. Tres modelos entrenados en PyTorch: A (MLP sobre 12 variables agregadas), B (LSTM con embeddings sobre las últimas K=6 transacciones) y C (red híbrida de dos ramas que combina B y A).
+**Proyecto de origen.** Proyecto 1. Tres modelos entrenados en PyTorch: A (MLP sobre 12 variables agregadas, que representa el sistema actual del banco simulado), B (LSTM con embeddings sobre las últimas K=6 transacciones) y C (red híbrida de dos ramas que combina B y A).
 
 **Modelo en producción.** B (`SequentialFraudLSTM`), por las razones de la sección 5.1. Se puede servir C con `MODEL=c` sin cambiar nada más.
 
@@ -62,7 +61,7 @@ Presentación: 9 de noviembre. Entrega límite: 15 de noviembre, 23:59.
 |---|---|
 | Pipeline serializado (`serving/pipeline.json`: medias y escalas, vocabularios) | El notebook ajustaba todo en memoria. La API necesita las mismas transformaciones sin regenerar datos. |
 | Variables calculadas en el servidor a partir de `recent_history` | El contrato original pedía 6 variables y el modelo usa 12. El cliente solo envía transacciones y, opcionalmente, `hist_avg_amount`. |
-| Umbral de revisión = óptimo de validación del modelo servido; umbral de bloqueo 0,65 | El contrato original usaba 0,18, que no coincidía con el óptimo calibrado. El 0,65 viene del contrato original [CONFIRMAR]. |
+| Umbral de revisión = óptimo de validación del modelo servido; umbral de bloqueo 0,65 | La política del Proyecto 1 usaba 0,18, que no coincidía con el óptimo calibrado. El 0,65 viene de esa misma política y no se derivó de un análisis de costos. |
 | Se quitaron `detected_pattern` y `confidence` de la respuesta | Los modelos solo producen un puntaje; esos campos no tenían origen. |
 
 **Limitaciones del modelo que conocemos** (encontradas al llevarlo a producción):
@@ -76,7 +75,7 @@ Presentación: 9 de noviembre. Entrega límite: 15 de noviembre, 23:59.
 ### 5.1 Hipótesis del modelo (Proyecto 1)
 
 **Hipótesis.** El orden de las transacciones aporta valor: el modelo secuencial supera a las variables agregadas.
-**Criterio de éxito** (tomado del notebook): ΔAUC-PR de C frente a A ≥ +0,05 y ahorro ≥ Q15 000 al mes (o 15%). [CONFIRMAR la fecha en que se definió, que debe ser anterior al entrenamiento.]
+**Criterio de éxito** (tomado del notebook): ΔAUC-PR de C frente a A ≥ +0,05 y ahorro ≥ Q15 000 al mes (o 15%). Este criterio aparece en las conclusiones del notebook y no antes de entrenar, así que no se presenta como fijado de antemano. El informe del Proyecto 1 ya lo señalaba.
 
 Resultados en prueba con los pesos de `artefactos/`. `export_artifacts.py` los reproduce y coinciden con `artefactos/metricas_completas.json`:
 
@@ -90,7 +89,7 @@ Resultados en prueba con los pesos de `artefactos/`. `export_artifacts.py` los r
 - **Resultado frente al criterio:** el ΔAUC-PR de C frente a A es +0,018, menor que +0,05, así que esa parte **no se cumple**. El ahorro de C frente a A es de Q551 280 al mes, así que esa parte sí se cumple. Como el criterio exige ambas, la hipótesis **no se cumple tal como fue planteada**. Con B, el modelo servido, el resultado es el mismo: ΔAUC-PR de +0,018 y ahorro de Q546 600 al mes. El valor del modelo secuencial aparece en el costo: frente a A, B baja los falsos positivos de 1459 a 104 y los falsos negativos de 11 a 4.
 - **Prueba de falsificación (permutación del orden):** al barajar la secuencia, el AUC-PR de B cae de 0,999 a 0,316 y el de C a 0,466.
 - **Ahorro mensual frente a A:** B Q546 600 y C Q551 280.
-- **Discrepancia con el informe del Proyecto 1.** El informe reportaba AUC-PR de 0,542 (A), 0,836 (B) y 0,841 (C). Los pesos de este repositorio no reproducen esos valores. Aquí se reporta lo que se puede verificar. [EXPLICAR de dónde salieron las cifras del informe.]
+- **Relación con el Proyecto 1.** Su informe reporta otra corrida del notebook, con un ahorro de B de Q641 520 al mes y la misma conclusión. Aquí se reportan los resultados de los pesos publicados, que son los que sirve la API.
 - **Cómo leer estos números.** Los datos sintéticos son fáciles de separar: hasta el modelo agregado A llega a 0,98. Estos resultados no anticipan el desempeño con datos reales.
 
 **Hipótesis C frente a B.** La hipótesis declarada en el notebook pedía que C superara a B en "X puntos" de AUC-PR en validación, y X nunca se fijó. En prueba, la mejora de AUC-PR es de 0,00001. En costo, B gana en validación (Q19 140 frente a Q26 820) y C gana en prueba (Q33 180 frente a Q35 520); son diferencias de pocos casos. 
@@ -105,7 +104,7 @@ Criterios [FIJAR ANTES DE MEDIR y conservar la fecha]:
 |---|---|---|---|
 | La API puntúa igual que el notebook | Error máximo entre ambos | ≤ 1e-5 | **Cumplido:** 150 transacciones por modelo, error 5,96e-08, con pesos aleatorios de semilla fija |
 | La API construye las mismas variables | Error máximo en variables y ids | ≤ 1e-4, 0 ids distintos | **Cumplido:** 400 transacciones de prueba, error 0 |
-| Los pesos reproducen lo reportado | AUC-PR de prueba frente al informe | Diferencia ≤ 0,02 | Frente a `metricas_completas.json`: **cumplido**, diferencia 0. Frente al informe del Proyecto 1: **no cumplido**, diferencias de 0,158 a 0,439 |
+| Los pesos reproducen lo reportado | AUC-PR de prueba frente al informe | Diferencia ≤ 0,02 | **Cumplido.** Frente a `metricas_completas.json`, diferencia 0. Frente al informe del Proyecto 1, diferencia máxima de 0,0005 |
 | Latencia en línea | p95 de extremo a extremo | < 25 ms (contrato original) | **No cumplido:** 371 ms desde Guatemala hasta Render (50 peticiones, 8 nov 2026). El modelo por sí solo tarda 1,4 ms en p95 |
 
 ### 5.3 Línea base
