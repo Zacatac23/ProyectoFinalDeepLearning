@@ -2,7 +2,7 @@
 
 Universidad del Valle · Deep Learning y Sistemas Inteligentes · 2026
 
-**Integrantes:** Jonathan Zacarías (231104) · Luis González (23353) · Diego López (23242)
+**Integrantes:** Jonathan Zacarías (231104) · Luis Gilberto González (23353) · Diego López (23242)
 
 **Servicio:** <https://fraude-api-t2ww.onrender.com> · **Presentación:** [`presentacion_final.pdf`](presentacion_final.pdf)
 **Modelo de origen:** Proyecto 1, *Monitoreo Transaccional* (notebook `proyecto1_monitoreo_transaccional.ipynb`). [AGREGAR el notebook al repositorio.]
