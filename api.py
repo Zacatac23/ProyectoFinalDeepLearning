@@ -2,7 +2,7 @@
 
 Ejecutar:  uvicorn api:app --host 0.0.0.0 --port 8000
 Variables de entorno (opcionales):
-  MODEL=c|b|a            modelo a servir (por defecto c, la Apuesta C)
+  MODEL=b|c|a            modelo a servir (por defecto b, elegido por su costo en Validacion)
   SERVING_DIR=serving    carpeta creada por export_artifacts.py
   BLOCK_THRESHOLD=0.65   puntaje desde el cual se bloquea (el umbral de revision es el optimo de Validacion)
   LOG_DIR=logs           carpeta del registro de uso cuando no hay base de datos
@@ -26,7 +26,7 @@ from fraude.request_features import parse_timestamp
 from fraude.request_log import build_request_log, rows_to_csv
 
 SERVING_DIR = Path(os.environ.get('SERVING_DIR', 'serving'))
-MODEL_NAME = os.environ.get('MODEL', 'c').lower()
+MODEL_NAME = os.environ.get('MODEL', 'b').lower()
 BLOCK_THRESHOLD = float(os.environ.get('BLOCK_THRESHOLD', '0.65'))
 LOG_DIR = Path(os.environ.get('LOG_DIR', 'logs'))
 REQUEST_LOG = build_request_log(os.environ.get('DATABASE_URL'), LOG_DIR)
