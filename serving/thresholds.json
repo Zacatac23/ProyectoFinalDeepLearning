@@ -1,0 +1,14 @@
+{
+  "a": {
+    "threshold": 0.3564646464646465,
+    "val_cost_quetzales": 304860.0
+  },
+  "b": {
+    "threshold": 0.01,
+    "val_cost_quetzales": 19140.0
+  },
+  "c": {
+    "threshold": 0.08919191919191918,
+    "val_cost_quetzales": 26820.0
+  }
+}

@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main, 'feature/**']
+  pull_request:
+    branches: [main]
+
+jobs:
+  api-image:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the image
+        run: docker build -t fraude-api .
+      - name: Start the API with the limits of Render's free plan
+        run: >-
+          docker run -d --name api --network host --memory=512m --cpus=0.1
+          -e PORT=8000
+          -e DATABASE_URL=postgresql://postgres:ci@localhost:5432/postgres
+          fraude-api
+      - name: Check the running API
+        run: python3 scripts/smoke_test.py http://localhost:8000
+      - name: Show the API logs
+        if: always()
+        run: docker logs api
+
+  equivalence-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run the repository tests when they exist
+        run: |
+          if [ ! -f tests/test_api.py ]; then
+            echo "tests/ is not in this branch yet."
+            exit 0
+          fi
+          python -m pip install -r requirements-export.txt
+          python -m tests.test_features_equivalence
+          python -m tests.test_model_equivalence
+          python -m tests.test_api

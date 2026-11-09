@@ -1,0 +1,81 @@
+{
+  "seq_len": 6,
+  "agg_feature_cols": [
+    "amount",
+    "delta_time_hours",
+    "hour_of_day",
+    "day_of_week",
+    "hist_avg_amount",
+    "amount_to_hist_avg_ratio",
+    "roll_mean_5",
+    "roll_max_5",
+    "roll_std_5",
+    "amount_to_roll_mean_ratio",
+    "roll_intl_count_5",
+    "is_international"
+  ],
+  "seq_num_cols": [
+    "amount",
+    "delta_time_hours",
+    "hour_of_day",
+    "is_international"
+  ],
+  "agg_mean": [
+    914.6828792994302,
+    20.124080098154067,
+    11.496680030948864,
+    3.090405852148836,
+    901.5169956777409,
+    660127.9268345381,
+    910.4758504994022,
+    2456.98541422241,
+    968.4738838587491,
+    2.2201982076555993,
+    0.5081592459731308,
+    0.10443131462333825
+  ],
+  "agg_scale": [
+    1604.1860685143438,
+    91.6057661777453,
+    6.929005701982743,
+    2.0053158123413066,
+    708.8435768321568,
+    14447001.194359742,
+    921.2008424711099,
+    2550.725311514242,
+    1096.458488024686,
+    9.865412865652955,
+    1.0274526590319442,
+    0.30581925241779595
+  ],
+  "seq_mean": [
+    914.6828792994302,
+    20.124080098154067,
+    11.496680030948864,
+    0.10443131462333825
+  ],
+  "seq_scale": [
+    1604.1860685143438,
+    91.6057661777453,
+    6.929005701982743,
+    0.30581925241779595
+  ],
+  "merchant_classes": [
+    "ATM_CASH",
+    "DIGITAL_SERVICE",
+    "ELECTRONICS",
+    "GAS_STATION",
+    "LUXURY_JEWELRY",
+    "RESTAURANT",
+    "SUPERMARKET",
+    "TRANSFER",
+    "UNKNOWN"
+  ],
+  "channel_classes": [
+    "ATM",
+    "ONLINE",
+    "POS",
+    "TRANSFER",
+    "UNKNOWN"
+  ]
+}

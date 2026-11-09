@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: fraude-api
+    runtime: docker
+    plan: free
+    region: virginia
+    branch: main
+    healthCheckPath: /health
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: DATABASE_URL
+        sync: false
