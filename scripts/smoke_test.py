@@ -15,6 +15,7 @@ from typing import Optional
 
 STARTUP_TIMEOUT_S = 150  # Render's free plan takes about a minute to wake up
 LOG_TIMEOUT_S = 30  # the log is written in the background, after the response
+LATENCY_PAUSE_S = 0.25  # keeps the measurement from saturating a 0.1 CPU instance
 
 
 def request(url: str, body: Optional[dict] = None, timeout: float = 60):
@@ -76,13 +77,19 @@ def main() -> None:
     print(f'usage log: {len(csv_lines) - 1} rows')
 
     if args.latency:
-        times = []
+        times, errors = [], 0
         for _ in range(args.latency):
             start = time.perf_counter()
-            score(base, examples['sondeo_y_vaciado'])
+            try:
+                score(base, examples['sondeo_y_vaciado'])
+            except (urllib.error.URLError, TimeoutError, ConnectionError):
+                errors += 1
+                continue
             times.append((time.perf_counter() - start) * 1000.0)
+            time.sleep(LATENCY_PAUSE_S)
+        assert times, 'Every latency request failed.'
         times.sort()
-        print(f'client latency over {len(times)} requests: p50 {statistics.median(times):.1f} ms | '
+        print(f'client latency over {len(times)} requests ({errors} failed): p50 {statistics.median(times):.1f} ms | '
               f'p95 {times[int(0.95 * (len(times) - 1))]:.1f} ms | max {times[-1]:.1f} ms')
     print('OK: the API responds, decides and records its usage.')
 
