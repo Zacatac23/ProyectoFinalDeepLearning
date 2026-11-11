@@ -8,6 +8,7 @@ Variables de entorno (opcionales):
   LOG_DIR=logs           carpeta del registro de uso cuando no hay base de datos
   DATABASE_URL=...       Postgres para el registro de uso (en produccion, Supabase)
 """
+import json
 import logging
 import os
 import statistics
@@ -30,6 +31,10 @@ MODEL_NAME = os.environ.get('MODEL', 'b').lower()
 BLOCK_THRESHOLD = float(os.environ.get('BLOCK_THRESHOLD', '0.65'))
 LOG_DIR = Path(os.environ.get('LOG_DIR', 'logs'))
 REQUEST_LOG = build_request_log(os.environ.get('DATABASE_URL'), LOG_DIR)
+WEB_DIR = Path(__file__).resolve().parent / 'web'
+CATALOG: List[Dict[str, Any]] = json.loads((WEB_DIR / 'ejemplos.json').read_text(encoding='utf-8'))
+EXAMPLES = {example['id']: example['request'] for example in CATALOG}
+PAGE = (WEB_DIR / 'index.html').read_text(encoding='utf-8')
 logger = logging.getLogger('uvicorn.error')
 
 
@@ -182,81 +187,23 @@ def logs_csv() -> Response:
                     headers={'Content-Disposition': 'attachment; filename="requests.csv"'})
 
 
-EXAMPLES = {
-    'normal': {
-        'client_id': 'CLI_0142',
-        'current_transaction': {'tx_id': 'DEMO_NORMAL', 'timestamp': '2026-03-31T14:23:10Z', 'amount': 280.0,
-                                'merchant_category': 'SUPERMARKET', 'channel': 'POS', 'is_international': 0},
-        'recent_history': [
-            {'timestamp': '2026-03-27T10:05:00Z', 'amount': 240.0, 'merchant_category': 'SUPERMARKET', 'channel': 'POS', 'is_international': 0},
-            {'timestamp': '2026-03-28T19:40:00Z', 'amount': 310.0, 'merchant_category': 'RESTAURANT', 'channel': 'POS', 'is_international': 0},
-            {'timestamp': '2026-03-29T09:12:00Z', 'amount': 190.0, 'merchant_category': 'GAS_STATION', 'channel': 'POS', 'is_international': 0},
-            {'timestamp': '2026-03-30T13:30:00Z', 'amount': 265.0, 'merchant_category': 'SUPERMARKET', 'channel': 'POS', 'is_international': 0},
-            {'timestamp': '2026-03-30T20:15:00Z', 'amount': 330.0, 'merchant_category': 'RESTAURANT', 'channel': 'POS', 'is_international': 0},
-            {'timestamp': '2026-03-31T09:00:00Z', 'amount': 210.0, 'merchant_category': 'SUPERMARKET', 'channel': 'POS', 'is_international': 0}],
-        'aggregated_profile': {'hist_avg_amount': 260.0},
-    },
-    'sondeo_y_vaciado': {
-        'client_id': 'CLI_0142',
-        'current_transaction': {'tx_id': 'DEMO_SONDEO', 'timestamp': '2026-03-31T14:23:10Z', 'amount': 4500.0,
-                                'merchant_category': 'LUXURY_JEWELRY', 'channel': 'ONLINE', 'is_international': 1},
-        'recent_history': [
-            {'timestamp': '2026-03-30T13:30:00Z', 'amount': 265.0, 'merchant_category': 'SUPERMARKET', 'channel': 'POS', 'is_international': 0},
-            {'timestamp': '2026-03-31T09:00:00Z', 'amount': 210.0, 'merchant_category': 'SUPERMARKET', 'channel': 'POS', 'is_international': 0},
-            {'timestamp': '2026-03-31T14:08:00Z', 'amount': 9.5, 'merchant_category': 'DIGITAL_SERVICE', 'channel': 'ONLINE', 'is_international': 1},
-            {'timestamp': '2026-03-31T14:12:00Z', 'amount': 12.0, 'merchant_category': 'DIGITAL_SERVICE', 'channel': 'ONLINE', 'is_international': 1},
-            {'timestamp': '2026-03-31T14:16:00Z', 'amount': 15.0, 'merchant_category': 'DIGITAL_SERVICE', 'channel': 'ONLINE', 'is_international': 1},
-            {'timestamp': '2026-03-31T14:20:00Z', 'amount': 18.0, 'merchant_category': 'DIGITAL_SERVICE', 'channel': 'ONLINE', 'is_international': 1}],
-        'aggregated_profile': {'hist_avg_amount': 260.0},
-    },
-}
-
-
 @app.get('/ejemplos')
 def ejemplos() -> Dict[str, Any]:
     return EXAMPLES
 
 
-PAGE = """<!doctype html><html lang="es"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Puntaje de riesgo de fraude</title>
-<style>
-:root{--bg:#fff;--fg:#1a1a1a;--card:#f4f4f6;--line:#d5d5da;--ok:#1b7f3b;--warn:#b26a00;--bad:#b3261e;--accent:#0b57d0}
-@media (prefers-color-scheme:dark){:root{--bg:#161618;--fg:#ececee;--card:#232326;--line:#3a3a3f;--ok:#58d17a;--warn:#f0b24a;--bad:#ff8a80;--accent:#8ab4f8}}
-body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--fg);max-width:880px;margin:0 auto;padding:16px}
-textarea{width:100%;height:320px;font-family:ui-monospace,Consolas,monospace;font-size:12px;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px;box-sizing:border-box}
-button{background:var(--accent);color:#fff;border:0;border-radius:8px;padding:10px 16px;font-size:14px;cursor:pointer;margin:4px 4px 4px 0}
-button.sec{background:var(--card);color:var(--fg);border:1px solid var(--line)}
-#out{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px;margin-top:12px}
-.big{font-size:28px;font-weight:700}.ok{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}
-small{opacity:.75}
-</style></head><body>
-<h1>Puntaje de riesgo de fraude</h1>
-<p>Modelo entrenado con datos <b>sintéticos</b>. Envía una transacción y su historial reciente y recibe el puntaje y la acción sugerida.</p>
-<div><button class="sec" onclick="load('normal')">Ejemplo normal</button>
-<button class="sec" onclick="load('sondeo_y_vaciado')">Ejemplo sospechoso (sondeo y vaciado)</button></div>
-<textarea id="req" spellcheck="false"></textarea>
-<div><button onclick="send()">Evaluar transacción</button></div>
-<div id="out"><small>El resultado aparecerá aquí.</small></div>
-<script>
-let EX={};
-fetch('ejemplos').then(r=>r.json()).then(j=>{EX=j;load('normal')});
-function load(k){document.getElementById('req').value=JSON.stringify(EX[k],null,2)}
-async function send(){
- const out=document.getElementById('out');out.textContent='Evaluando…';
- try{
-  const r=await fetch('score',{method:'POST',headers:{'Content-Type':'application/json'},body:document.getElementById('req').value});
-  const j=await r.json();
-  if(!r.ok){out.textContent='Error '+r.status+': '+JSON.stringify(j.detail);return}
-  const cls=j.decision==='APPROVE'?'ok':(j.decision==='STEP_UP_AUTH'?'warn':'bad');
-  const names={APPROVE:'Aprobar',STEP_UP_AUTH:'Pedir autenticación reforzada',BLOCK_TRANSACTION:'Bloquear'};
-  out.innerHTML='<div class="big '+cls+'">'+names[j.decision]+'</div>'
-   +'<p>Puntaje de riesgo: <b>'+j.fraud_risk_score.toFixed(4)+'</b> · revisión desde '+j.review_threshold.toFixed(2)+' · bloqueo desde '+j.block_threshold.toFixed(2)+'</p>'
-   +'<p><small>Modelo '+j.model.toUpperCase()+' · '+j.latency_ms.toFixed(2)+' ms · historial usado: '+j.history_used+'</small></p>'
-   +(j.warnings.length?'<p><small>'+j.warnings.join('<br>')+'</small></p>':'');
- }catch(e){out.textContent='No se pudo contactar el servicio: '+e}
-}
-</script></body></html>"""
+@app.get('/catalogo')
+def catalogo() -> Dict[str, Any]:
+    """Ejemplos con contexto y vocabulario para la pagina de demostracion."""
+    scorer = app.state.scorer
+    return {
+        'model': scorer.model_name,
+        'review_threshold': scorer.optimal_threshold,
+        'block_threshold': BLOCK_THRESHOLD,
+        'merchants': [m for m in scorer.pipe['merchant_classes'] if m != 'UNKNOWN'],
+        'channels': [c for c in scorer.pipe['channel_classes'] if c != 'UNKNOWN'],
+        'examples': CATALOG,
+    }
 
 
 @app.get('/', response_class=HTMLResponse)

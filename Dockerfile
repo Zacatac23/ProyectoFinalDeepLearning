@@ -9,6 +9,7 @@ RUN pip install -r requirements-api.txt
 COPY fraude/ fraude/
 COPY api.py .
 COPY serving/ serving/
+COPY web/ web/
 
 ENV MODEL=b SERVING_DIR=serving LOG_DIR=/tmp/logs
 EXPOSE 8000

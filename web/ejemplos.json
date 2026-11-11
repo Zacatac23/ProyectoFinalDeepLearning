@@ -1,0 +1,587 @@
+[
+  {
+    "id": "normal",
+    "title": "Cliente habitual",
+    "description": "Compras de supermercado, restaurante y gasolinera con montos parecidos.",
+    "truth": "legitima",
+    "source": "Construido a mano",
+    "request": {
+      "client_id": "CLI_0142",
+      "current_transaction": {
+        "tx_id": "DEMO_NORMAL",
+        "timestamp": "2026-03-31T14:23:10Z",
+        "amount": 280.0,
+        "merchant_category": "SUPERMARKET",
+        "channel": "POS",
+        "is_international": 0
+      },
+      "recent_history": [
+        {
+          "timestamp": "2026-03-27T10:05:00Z",
+          "amount": 240.0,
+          "merchant_category": "SUPERMARKET",
+          "channel": "POS",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-28T19:40:00Z",
+          "amount": 310.0,
+          "merchant_category": "RESTAURANT",
+          "channel": "POS",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-29T09:12:00Z",
+          "amount": 190.0,
+          "merchant_category": "GAS_STATION",
+          "channel": "POS",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-30T13:30:00Z",
+          "amount": 265.0,
+          "merchant_category": "SUPERMARKET",
+          "channel": "POS",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-30T20:15:00Z",
+          "amount": 330.0,
+          "merchant_category": "RESTAURANT",
+          "channel": "POS",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-31T09:00:00Z",
+          "amount": 210.0,
+          "merchant_category": "SUPERMARKET",
+          "channel": "POS",
+          "is_international": 0
+        }
+      ],
+      "aggregated_profile": {
+        "hist_avg_amount": 260.0
+      }
+    }
+  },
+  {
+    "id": "viaje",
+    "title": "Cliente de viaje",
+    "description": "Compras internacionales grandes en restaurante y joyería, de un cliente legítimo que viaja.",
+    "truth": "legitima",
+    "source": "Transacción TX_0070180 del conjunto de prueba sintético",
+    "request": {
+      "client_id": "CLI_0400",
+      "current_transaction": {
+        "tx_id": "TX_0070180",
+        "timestamp": "2026-03-21T23:01:11Z",
+        "amount": 2834.1,
+        "merchant_category": "RESTAURANT",
+        "channel": "POS",
+        "is_international": 1
+      },
+      "recent_history": [
+        {
+          "timestamp": "2026-03-20T02:23:08Z",
+          "amount": 330.06,
+          "merchant_category": "RESTAURANT",
+          "channel": "POS",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-20T17:20:57Z",
+          "amount": 380.57,
+          "merchant_category": "RESTAURANT",
+          "channel": "POS",
+          "is_international": 1
+        },
+        {
+          "timestamp": "2026-03-20T21:32:27Z",
+          "amount": 198.22,
+          "merchant_category": "RESTAURANT",
+          "channel": "ONLINE",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-21T04:58:42Z",
+          "amount": 248.01,
+          "merchant_category": "GAS_STATION",
+          "channel": "POS",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-21T05:37:05Z",
+          "amount": 516.62,
+          "merchant_category": "RESTAURANT",
+          "channel": "POS",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-21T20:22:57Z",
+          "amount": 3545.13,
+          "merchant_category": "LUXURY_JEWELRY",
+          "channel": "ONLINE",
+          "is_international": 1
+        }
+      ],
+      "aggregated_profile": {
+        "hist_avg_amount": 918.51
+      }
+    }
+  },
+  {
+    "id": "transferencia_inusual",
+    "title": "Transferencia inusual",
+    "description": "Siempre paga en gasolineras entre Q190 y Q400; de pronto transfiere Q3,623.",
+    "truth": "legitima",
+    "source": "Transacción TX_0209603 del conjunto de prueba sintético",
+    "request": {
+      "client_id": "CLI_1173",
+      "current_transaction": {
+        "tx_id": "TX_0209603",
+        "timestamp": "2026-03-22T20:57:14Z",
+        "amount": 3623.08,
+        "merchant_category": "TRANSFER",
+        "channel": "TRANSFER",
+        "is_international": 0
+      },
+      "recent_history": [
+        {
+          "timestamp": "2026-03-20T11:06:16Z",
+          "amount": 190.04,
+          "merchant_category": "GAS_STATION",
+          "channel": "POS",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-20T18:06:12Z",
+          "amount": 341.63,
+          "merchant_category": "GAS_STATION",
+          "channel": "POS",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-21T05:41:15Z",
+          "amount": 263.23,
+          "merchant_category": "GAS_STATION",
+          "channel": "POS",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-22T03:22:25Z",
+          "amount": 401.0,
+          "merchant_category": "GAS_STATION",
+          "channel": "POS",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-22T05:28:45Z",
+          "amount": 271.11,
+          "merchant_category": "GAS_STATION",
+          "channel": "POS",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-22T08:50:58Z",
+          "amount": 236.64,
+          "merchant_category": "GAS_STATION",
+          "channel": "POS",
+          "is_international": 0
+        }
+      ],
+      "aggregated_profile": {
+        "hist_avg_amount": 731.76
+      }
+    }
+  },
+  {
+    "id": "joyeria_internacional",
+    "title": "Joyería en el extranjero",
+    "description": "Compra en línea de joyería por Q9,164 desde el extranjero, tras compras pequeñas.",
+    "truth": "legitima",
+    "source": "Transacción TX_0094225 del conjunto de prueba sintético",
+    "request": {
+      "client_id": "CLI_0533",
+      "current_transaction": {
+        "tx_id": "TX_0094225",
+        "timestamp": "2026-03-23T07:20:35Z",
+        "amount": 9163.73,
+        "merchant_category": "LUXURY_JEWELRY",
+        "channel": "ONLINE",
+        "is_international": 1
+      },
+      "recent_history": [
+        {
+          "timestamp": "2026-03-21T07:58:07Z",
+          "amount": 3525.76,
+          "merchant_category": "TRANSFER",
+          "channel": "TRANSFER",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-21T10:40:03Z",
+          "amount": 196.15,
+          "merchant_category": "GAS_STATION",
+          "channel": "POS",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-21T21:54:18Z",
+          "amount": 350.6,
+          "merchant_category": "GAS_STATION",
+          "channel": "POS",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-22T16:14:26Z",
+          "amount": 56.37,
+          "merchant_category": "DIGITAL_SERVICE",
+          "channel": "ONLINE",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-22T21:36:16Z",
+          "amount": 370.92,
+          "merchant_category": "GAS_STATION",
+          "channel": "POS",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-23T03:57:06Z",
+          "amount": 122.53,
+          "merchant_category": "DIGITAL_SERVICE",
+          "channel": "ONLINE",
+          "is_international": 1
+        }
+      ],
+      "aggregated_profile": {
+        "hist_avg_amount": 699.62
+      }
+    }
+  },
+  {
+    "id": "sondeo_y_vaciado",
+    "title": "Sondeo y vaciado",
+    "description": "Cuatro cargos pequeños en minutos y luego una compra grande de joyería en el extranjero.",
+    "truth": "fraude",
+    "source": "Construido a mano",
+    "request": {
+      "client_id": "CLI_0142",
+      "current_transaction": {
+        "tx_id": "DEMO_SONDEO",
+        "timestamp": "2026-03-31T14:23:10Z",
+        "amount": 4500.0,
+        "merchant_category": "LUXURY_JEWELRY",
+        "channel": "ONLINE",
+        "is_international": 1
+      },
+      "recent_history": [
+        {
+          "timestamp": "2026-03-30T13:30:00Z",
+          "amount": 265.0,
+          "merchant_category": "SUPERMARKET",
+          "channel": "POS",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-31T09:00:00Z",
+          "amount": 210.0,
+          "merchant_category": "SUPERMARKET",
+          "channel": "POS",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-31T14:08:00Z",
+          "amount": 9.5,
+          "merchant_category": "DIGITAL_SERVICE",
+          "channel": "ONLINE",
+          "is_international": 1
+        },
+        {
+          "timestamp": "2026-03-31T14:12:00Z",
+          "amount": 12.0,
+          "merchant_category": "DIGITAL_SERVICE",
+          "channel": "ONLINE",
+          "is_international": 1
+        },
+        {
+          "timestamp": "2026-03-31T14:16:00Z",
+          "amount": 15.0,
+          "merchant_category": "DIGITAL_SERVICE",
+          "channel": "ONLINE",
+          "is_international": 1
+        },
+        {
+          "timestamp": "2026-03-31T14:20:00Z",
+          "amount": 18.0,
+          "merchant_category": "DIGITAL_SERVICE",
+          "channel": "ONLINE",
+          "is_international": 1
+        }
+      ],
+      "aggregated_profile": {
+        "hist_avg_amount": 260.0
+      }
+    }
+  },
+  {
+    "id": "rafaga",
+    "title": "Ráfaga en línea",
+    "description": "Tras compras normales, dos compras internacionales de más de Q1,000 en tres minutos.",
+    "truth": "fraude",
+    "source": "Transacción TX_0003737 del conjunto de prueba sintético",
+    "request": {
+      "client_id": "CLI_0022",
+      "current_transaction": {
+        "tx_id": "TX_0003737",
+        "timestamp": "2026-03-20T06:35:45Z",
+        "amount": 1893.84,
+        "merchant_category": "DIGITAL_SERVICE",
+        "channel": "ONLINE",
+        "is_international": 1
+      },
+      "recent_history": [
+        {
+          "timestamp": "2026-03-18T07:00:33Z",
+          "amount": 205.7,
+          "merchant_category": "SUPERMARKET",
+          "channel": "ONLINE",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-18T09:44:41Z",
+          "amount": 1371.73,
+          "merchant_category": "ATM_CASH",
+          "channel": "ATM",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-18T19:08:11Z",
+          "amount": 410.61,
+          "merchant_category": "SUPERMARKET",
+          "channel": "POS",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-19T04:11:31Z",
+          "amount": 328.78,
+          "merchant_category": "SUPERMARKET",
+          "channel": "POS",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-19T11:15:46Z",
+          "amount": 145.44,
+          "merchant_category": "SUPERMARKET",
+          "channel": "ONLINE",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-20T06:32:42Z",
+          "amount": 1153.18,
+          "merchant_category": "ELECTRONICS",
+          "channel": "ONLINE",
+          "is_international": 1
+        }
+      ],
+      "aggregated_profile": {
+        "hist_avg_amount": 619.1
+      }
+    }
+  },
+  {
+    "id": "pico_cajero",
+    "title": "Retiro enorme en cajero",
+    "description": "Cliente de supermercado que de repente retira Q8,795 en un cajero.",
+    "truth": "fraude",
+    "source": "Transacción TX_0213122 del conjunto de prueba sintético",
+    "request": {
+      "client_id": "CLI_1193",
+      "current_transaction": {
+        "tx_id": "TX_0213122",
+        "timestamp": "2026-03-30T06:24:39Z",
+        "amount": 8795.37,
+        "merchant_category": "ATM_CASH",
+        "channel": "ATM",
+        "is_international": 0
+      },
+      "recent_history": [
+        {
+          "timestamp": "2026-03-28T23:28:46Z",
+          "amount": 361.65,
+          "merchant_category": "SUPERMARKET",
+          "channel": "POS",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-29T02:06:13Z",
+          "amount": 301.85,
+          "merchant_category": "SUPERMARKET",
+          "channel": "ONLINE",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-29T08:11:59Z",
+          "amount": 1350.13,
+          "merchant_category": "TRANSFER",
+          "channel": "TRANSFER",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-29T09:09:08Z",
+          "amount": 436.41,
+          "merchant_category": "SUPERMARKET",
+          "channel": "POS",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-29T09:40:16Z",
+          "amount": 127.64,
+          "merchant_category": "SUPERMARKET",
+          "channel": "ONLINE",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-29T16:40:03Z",
+          "amount": 113.28,
+          "merchant_category": "SUPERMARKET",
+          "channel": "POS",
+          "is_international": 0
+        }
+      ],
+      "aggregated_profile": {
+        "hist_avg_amount": 679.92
+      }
+    }
+  },
+  {
+    "id": "falso_positivo",
+    "title": "Cliente legítimo bloqueado",
+    "description": "Cliente que paga servicios digitales hace una compra internacional de Q188. Es legítima.",
+    "truth": "legitima",
+    "source": "Transacción TX_0142501 del conjunto de prueba sintético",
+    "request": {
+      "client_id": "CLI_0799",
+      "current_transaction": {
+        "tx_id": "TX_0142501",
+        "timestamp": "2026-03-18T22:49:18Z",
+        "amount": 188.36,
+        "merchant_category": "DIGITAL_SERVICE",
+        "channel": "ONLINE",
+        "is_international": 1
+      },
+      "recent_history": [
+        {
+          "timestamp": "2026-03-12T03:55:13Z",
+          "amount": 84.2,
+          "merchant_category": "DIGITAL_SERVICE",
+          "channel": "ONLINE",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-13T01:52:10Z",
+          "amount": 123.6,
+          "merchant_category": "DIGITAL_SERVICE",
+          "channel": "ONLINE",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-14T19:54:05Z",
+          "amount": 91.23,
+          "merchant_category": "DIGITAL_SERVICE",
+          "channel": "ONLINE",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-15T23:03:10Z",
+          "amount": 84.25,
+          "merchant_category": "DIGITAL_SERVICE",
+          "channel": "ONLINE",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-16T18:58:51Z",
+          "amount": 101.88,
+          "merchant_category": "DIGITAL_SERVICE",
+          "channel": "ONLINE",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-18T00:42:41Z",
+          "amount": 57.93,
+          "merchant_category": "DIGITAL_SERVICE",
+          "channel": "ONLINE",
+          "is_international": 0
+        }
+      ],
+      "aggregated_profile": {
+        "hist_avg_amount": 528.45
+      }
+    }
+  },
+  {
+    "id": "fraude_no_detectado",
+    "title": "Fraude que se escapa",
+    "description": "Cliente de restaurantes que recibe una transferencia fraudulenta de Q4,041.",
+    "truth": "fraude",
+    "source": "Transacción TX_0212518 del conjunto de prueba sintético",
+    "request": {
+      "client_id": "CLI_1190",
+      "current_transaction": {
+        "tx_id": "TX_0212518",
+        "timestamp": "2026-03-20T07:36:33Z",
+        "amount": 4041.11,
+        "merchant_category": "TRANSFER",
+        "channel": "TRANSFER",
+        "is_international": 0
+      },
+      "recent_history": [
+        {
+          "timestamp": "2026-03-17T21:53:31Z",
+          "amount": 554.53,
+          "merchant_category": "RESTAURANT",
+          "channel": "ONLINE",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-18T00:47:07Z",
+          "amount": 424.83,
+          "merchant_category": "RESTAURANT",
+          "channel": "POS",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-18T05:27:54Z",
+          "amount": 110.54,
+          "merchant_category": "RESTAURANT",
+          "channel": "ONLINE",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-18T17:42:57Z",
+          "amount": 464.14,
+          "merchant_category": "RESTAURANT",
+          "channel": "POS",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-19T09:10:48Z",
+          "amount": 133.91,
+          "merchant_category": "RESTAURANT",
+          "channel": "POS",
+          "is_international": 0
+        },
+        {
+          "timestamp": "2026-03-19T20:02:03Z",
+          "amount": 359.62,
+          "merchant_category": "RESTAURANT",
+          "channel": "ONLINE",
+          "is_international": 0
+        }
+      ],
+      "aggregated_profile": {
+        "hist_avg_amount": 897.45
+      }
+    }
+  }
+]

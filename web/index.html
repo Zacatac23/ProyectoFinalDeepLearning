@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Riesgo de fraude</title>
+<style>
+:root {
+  --bg: #F4F2EC; --surface: #FCFBF8; --sunken: #ECE8DF; --ink: #10233A; --text: #2A3543;
+  --muted: #5B6673; --line: #D6D0C3; --accent: #8A6A2E; --accent-soft: #F1E7D2;
+  --ok: #1E6B45; --ok-soft: #E2F0E7; --warn: #8F5400; --warn-soft: #F8EBD3;
+  --bad: #A3302A; --bad-soft: #F7E1DF; --focus: #2F5D9E;
+  --serif: Georgia, 'Times New Roman', serif;
+  --sans: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1823; --surface: #132232; --sunken: #0F1C29; --ink: #F1EEE6; --text: #DCE2EA;
+    --muted: #9CA9B7; --line: #2A3B4E; --accent: #D4B676; --accent-soft: #2E2A1F;
+    --ok: #6CCB97; --ok-soft: #173326; --warn: #E8AE5A; --warn-soft: #36290F;
+    --bad: #F2948B; --bad-soft: #3A1F1E; --focus: #8AB4F8; color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 var(--sans); }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.wrap { max-width: 1280px; margin: 0 auto; padding: 24px 16px 48px; }
+header { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: flex-end; justify-content: space-between;
+  border-bottom: 1px solid var(--line); padding-bottom: 16px; margin-bottom: 24px; }
+.eyebrow { margin: 0 0 4px; font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+h1 { margin: 0; font: 400 32px/1.15 var(--serif); color: var(--ink); }
+h2 { margin: 0 0 12px; font: 400 21px/1.2 var(--serif); color: var(--ink); }
+.sub { margin: 6px 0 0; color: var(--muted); max-width: 640px; }
+.links { display: flex; gap: 16px; font-size: 14px; }
+a { color: var(--ink); }
+.layout { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 20px; }
+.stack { display: grid; gap: 24px; min-width: 0; }
+
+.examples { display: grid; gap: 8px; }
+.group-label { margin: 12px 0 2px; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.group-label:first-child { margin-top: 0; }
+.ex { display: grid; gap: 2px; width: 100%; text-align: left; padding: 10px 12px; cursor: pointer;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+.ex:hover { border-color: var(--accent); }
+.ex[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 3px 0 0 var(--accent); }
+.ex b { color: var(--ink); font-weight: 600; }
+.ex span { font-size: 13px; color: var(--muted); }
+
+.timeline { width: 100%; height: auto; display: block; }
+.timeline .bar { fill: var(--ink); }
+.timeline .bar.intl { fill: var(--accent); }
+.timeline .bar.current { stroke: var(--bad); stroke-width: 3; }
+.timeline text { fill: var(--text); font-family: var(--sans); }
+.timeline .muted { fill: var(--muted); }
+.timeline .gap { fill: var(--muted); font-size: 12px; }
+.timeline .axis { stroke: var(--line); }
+.legend { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 8px; font-size: 13px; color: var(--muted); }
+.swatch { display: inline-block; width: 12px; height: 12px; border-radius: 2px; vertical-align: -1px; margin-right: 6px; }
+
+.table-wrap { overflow-x: auto; margin-top: 4px; }
+table { width: 100%; border-collapse: collapse; table-layout: fixed; min-width: 854px; }
+td input[type="checkbox"] { width: 18px; height: 18px; }
+th { text-align: left; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted);
+  padding: 6px 6px; border-bottom: 1px solid var(--line); }
+td { padding: 6px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+tr.current td { background: var(--accent-soft); }
+td input[type="datetime-local"], td input[type="number"], td select { width: 100%; padding: 6px 8px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 6px; }
+td input[type="number"] { text-align: right; font-variant-numeric: tabular-nums; }
+.tag { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--sunken); color: var(--muted); white-space: nowrap; }
+.tag.now { background: var(--ink); color: var(--surface); }
+.icon-btn { border: 1px solid var(--line); background: transparent; border-radius: 6px; width: 32px; height: 32px; cursor: pointer; color: var(--muted); }
+.icon-btn:hover { color: var(--bad); border-color: var(--bad); }
+.row-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-top: 12px; }
+.field { display: flex; gap: 8px; align-items: center; font-size: 14px; color: var(--muted); }
+.field input { width: 130px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); text-align: right; }
+.btn { border: 1px solid var(--line); background: var(--surface); padding: 8px 14px; border-radius: 8px; cursor: pointer; }
+.btn:hover { border-color: var(--ink); }
+.btn.primary { background: var(--ink); color: var(--surface); border-color: var(--ink); font-weight: 600; padding: 10px 20px; }
+.btn.primary:hover { opacity: .92; }
+.btn:disabled { opacity: .5; cursor: progress; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+textarea { width: 100%; min-height: 280px; margin-top: 12px; padding: 12px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--sunken); font: 13px/1.45 ui-monospace, Consolas, monospace; }
+.hidden { display: none !important; }
+.note { font-size: 13px; color: var(--muted); }
+.error { color: var(--bad); font-weight: 600; }
+
+.result-head { display: flex; flex-wrap: wrap; gap: 16px 32px; align-items: baseline; justify-content: space-between; }
+.decision { font: 400 34px/1.1 var(--serif); }
+.decision.APPROVE { color: var(--ok); } .decision.STEP_UP_AUTH { color: var(--warn); } .decision.BLOCK_TRANSACTION { color: var(--bad); }
+.score { font: 400 34px/1.1 var(--serif); color: var(--ink); font-variant-numeric: tabular-nums; }
+.score small { display: block; font: 13px var(--sans); color: var(--muted); }
+.zones { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); margin: 28px 0 6px; border-radius: 6px; overflow: visible; }
+.zone { padding: 10px 10px 8px; font-size: 13px; border-top: 6px solid; }
+.zone b { display: block; font-size: 14px; }
+.zone.ok { background: var(--ok-soft); border-color: var(--ok); color: var(--ok); }
+.zone.warn { background: var(--warn-soft); border-color: var(--warn); color: var(--warn); }
+.zone.bad { background: var(--bad-soft); border-color: var(--bad); color: var(--bad); }
+.marker { position: absolute; top: -18px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; pointer-events: none; }
+.marker span { font-size: 12px; font-weight: 600; color: var(--ink); background: var(--surface); border: 1px solid var(--ink); border-radius: 4px; padding: 0 6px; }
+.marker i { width: 2px; height: 30px; background: var(--ink); }
+.verdict { margin-top: 16px; padding: 12px 14px; border-radius: 8px; background: var(--sunken); }
+.verdict b { color: var(--ink); }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 24px; margin-top: 12px; font-size: 13px; color: var(--muted); }
+ul.signals { margin: 8px 0 0; padding-left: 20px; }
+ul.signals li { margin: 4px 0; }
+footer { margin-top: 32px; font-size: 13px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <p class="eyebrow">Proyecto final · Deep Learning y Sistemas Inteligentes</p>
+      <h1>Puntaje de riesgo de fraude</h1>
+      <p class="sub">El modelo lee la compra actual y las 6 anteriores del cliente, en orden, y sugiere aprobar, pedir verificación o bloquear. Los datos son <b>sintéticos</b>.</p>
+    </div>
+    <nav class="links" aria-label="Enlaces de la API">
+      <a href="docs">Documentación de la API</a>
+      <a href="stats">Estadísticas de uso</a>
+    </nav>
+  </header>
+
+  <div class="layout">
+    <aside class="panel" aria-labelledby="ex-title">
+      <h2 id="ex-title">Ejemplos</h2>
+      <p class="note">Casos con distintos puntajes. Puedes editarlos después de elegirlos.</p>
+      <div id="examples" class="examples"></div>
+    </aside>
+
+    <main class="stack">
+      <section class="panel" aria-labelledby="seq-title">
+        <h2 id="seq-title">Secuencia de compras</h2>
+        <p id="ex-desc" class="note"></p>
+        <svg id="timeline" class="timeline" viewBox="0 0 760 250" role="img" aria-label="Secuencia de compras"></svg>
+        <div class="legend">
+          <span><i class="swatch" style="background:var(--ink)"></i>Nacional</span>
+          <span><i class="swatch" style="background:var(--accent)"></i>Internacional</span>
+          <span><i class="swatch" style="border:3px solid var(--bad)"></i>Compra a evaluar</span>
+          <span>Altura en escala logarítmica del monto</span>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="edit-title">
+        <h2 id="edit-title">Editar transacciones</h2>
+        <p class="note">Hora en UTC. La última fila es la compra que se evalúa; las demás son su historial, de la más antigua a la más reciente.</p>
+        <div class="table-wrap">
+          <table>
+            <colgroup><col style="width:84px"><col style="width:228px"><col style="width:104px"><col style="width:158px"><col style="width:140px"><col style="width:96px"><col style="width:44px"></colgroup>
+            <thead><tr><th></th><th>Fecha y hora</th><th>Monto (Q)</th><th>Comercio</th><th>Canal</th><th>Internacional</th><th></th></tr></thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+        <div class="row-actions">
+          <button id="add-row" class="btn" type="button">+ Agregar compra previa</button>
+          <label class="field">Promedio histórico del cliente (Q, opcional)
+            <input id="hist-avg" type="number" min="0" step="0.01" inputmode="decimal">
+          </label>
+        </div>
+        <div class="row-actions">
+          <div class="actions">
+            <button id="evaluate" class="btn primary" type="button">Evaluar compra</button>
+            <button id="reset" class="btn" type="button">Restablecer ejemplo</button>
+          </div>
+          <button id="toggle-json" class="btn" type="button" aria-expanded="false" aria-controls="json-box">Ver JSON</button>
+        </div>
+        <div id="json-box" class="hidden">
+          <textarea id="json" spellcheck="false" aria-label="Petición en JSON"></textarea>
+          <div class="actions" style="margin-top:8px">
+            <button id="apply-json" class="btn" type="button">Aplicar JSON</button>
+            <span id="json-error" class="error" role="alert"></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="res-title" aria-live="polite">
+        <h2 id="res-title">Resultado</h2>
+        <div id="result"><p class="note">Elige un ejemplo o pulsa <b>Evaluar compra</b>.</p></div>
+      </section>
+    </main>
+  </div>
+  <footer>Servicio de demostración con datos sintéticos. El puntaje ordena el riesgo, pero no es una probabilidad calibrada, y el modelo no explica por qué decide.</footer>
+</div>
+
+<script>
+const MERCHANTS = { SUPERMARKET: 'Supermercado', GAS_STATION: 'Gasolinera', RESTAURANT: 'Restaurante', ELECTRONICS: 'Electrónica',
+  LUXURY_JEWELRY: 'Joyería', DIGITAL_SERVICE: 'Servicio digital', ATM_CASH: 'Cajero', TRANSFER: 'Transferencia' };
+const CHANNELS = { POS: 'Tienda (POS)', ONLINE: 'En línea', ATM: 'Cajero', TRANSFER: 'Transferencia' };
+const DECISIONS = { APPROVE: 'Aprobar', STEP_UP_AUTH: 'Pedir verificación', BLOCK_TRANSACTION: 'Bloquear' };
+const MAX_HISTORY = 6;
+const $ = (id) => document.getElementById(id);
+const money = (v) => 'Q' + Number(v || 0).toLocaleString('es-GT', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+const state = { catalog: null, example: null, history: [], current: null, histAvg: '', clientId: 'DEMO', edited: false };
+
+function el(tag, attrs = {}, ...children) {
+  const node = tag === 'svg' || attrs.svg ? document.createElementNS('http://www.w3.org/2000/svg', tag) : document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === 'svg' || v === undefined || v === null || v === false) continue;
+    if (k === 'text') node.textContent = v;
+    else if (k.startsWith('on')) node.addEventListener(k.slice(2), v);
+    else node.setAttribute(k, v === true ? '' : v);
+  }
+  for (const c of children.flat()) if (c != null) node.append(c);
+  return node;
+}
+const svgEl = (tag, attrs = {}, text) => { const n = el(tag, { ...attrs, svg: true }); if (text != null) n.textContent = text; return n; };
+const toInput = (iso) => (iso || '').replace('Z', '').slice(0, 19);
+const fromInput = (v) => (v.length === 16 ? v + ':00' : v) + 'Z';
+const parseTime = (iso) => new Date(iso.endsWith('Z') ? iso : iso + 'Z').getTime();
+const label = (map, key) => map[key] || key;
+
+function formatGap(ms) {
+  const min = Math.round(ms / 60000);
+  if (min < 60) return '+' + min + ' min';
+  const h = Math.round(min / 60);
+  if (h < 48) return '+' + h + ' h';
+  return '+' + Math.round(h / 24) + ' d';
+}
+function formatScore(s) {
+  if (s > 0 && s < 0.0001) return '< 0.0001';
+  if (s > 0.9999 && s < 1) return '> 0.9999';
+  return s.toFixed(4);
+}
+
+function loadExample(ex) {
+  const req = JSON.parse(JSON.stringify(ex.request));
+  state.example = ex;
+  state.clientId = req.client_id || 'DEMO';
+  state.current = { ...req.current_transaction };
+  state.history = (req.recent_history || []).map((t) => ({ ...t }));
+  state.histAvg = req.aggregated_profile && req.aggregated_profile.hist_avg_amount != null ? String(req.aggregated_profile.hist_avg_amount) : '';
+  state.edited = false;
+  sortHistory();
+  renderAll();
+}
+function sortHistory() { state.history.sort((a, b) => parseTime(a.timestamp) - parseTime(b.timestamp)); }
+function buildRequest() {
+  const tx = (t) => ({ timestamp: t.timestamp, amount: Number(t.amount), merchant_category: t.merchant_category,
+    channel: t.channel, is_international: t.is_international ? 1 : 0 });
+  const req = { client_id: state.clientId, current_transaction: { ...(state.current.tx_id ? { tx_id: state.current.tx_id } : {}), ...tx(state.current) },
+    recent_history: state.history.map(tx) };
+  if (state.histAvg !== '') req.aggregated_profile = { hist_avg_amount: Number(state.histAvg) };
+  return req;
+}
+function markEdited() { state.edited = true; renderTimeline(); renderJson(); renderExamples(); }
+
+function renderAll() { renderExamples(); renderTimeline(); renderRows(); renderJson(); $('hist-avg').value = state.histAvg;
+  $('ex-desc').textContent = state.example ? state.example.description : ''; }
+
+function renderExamples() {
+  const box = $('examples');
+  box.replaceChildren();
+  const groups = [['legitima', 'Compras legítimas en los datos'], ['fraude', 'Fraudes en los datos']];
+  for (const [truth, title] of groups) {
+    box.append(el('p', { class: 'group-label', text: title }));
+    for (const ex of state.catalog.examples.filter((e) => e.truth === truth)) {
+      box.append(el('button', { class: 'ex', type: 'button', 'aria-pressed': state.example && state.example.id === ex.id ? 'true' : 'false',
+        onclick: () => { loadExample(ex); evaluate(); } }, el('b', { text: ex.title }), el('span', { text: ex.description })));
+    }
+  }
+}
+
+function renderTimeline() {
+  const svg = $('timeline');
+  svg.replaceChildren();
+  const seq = [...state.history.slice(-MAX_HISTORY), { ...state.current, now: true }];
+  const W = 760, top = 52, base = 168, left = 50, right = 50;
+  const step = seq.length > 1 ? (W - left - right) / (seq.length - 1) : 0;
+  const logs = seq.map((t) => Math.log10(Math.max(Number(t.amount) || 0, 0) + 1));
+  const maxLog = Math.max(...logs, 1);
+  svg.append(svgEl('line', { class: 'axis', x1: 20, x2: W - 20, y1: base, y2: base }));
+  seq.forEach((t, i) => {
+    const x = seq.length > 1 ? left + i * step : W / 2;
+    const h = Math.max(4, (logs[i] / maxLog) * (base - top));
+    if (i > 0) {
+      const gap = parseTime(t.timestamp) - parseTime(seq[i - 1].timestamp);
+      svg.append(svgEl('text', { class: 'gap', x: x - step / 2, y: 18, 'text-anchor': 'middle' }, isFinite(gap) ? formatGap(gap) : '?'));
+    }
+    svg.append(svgEl('rect', { class: 'bar' + (t.is_international ? ' intl' : '') + (t.now ? ' current' : ''),
+      x: x - 16, y: base - h, width: 32, height: h, rx: 3 }));
+    svg.append(svgEl('text', { x, y: base - h - 8, 'text-anchor': 'middle', 'font-size': 13, 'font-weight': 600 }, money(t.amount)));
+    svg.append(svgEl('text', { x, y: base + 20, 'text-anchor': 'middle', 'font-size': 12 }, label(MERCHANTS, t.merchant_category)));
+    svg.append(svgEl('text', { class: 'muted', x, y: base + 37, 'text-anchor': 'middle', 'font-size': 12 },
+      label(CHANNELS, t.channel) + (t.is_international ? ' · Int.' : '')));
+    if (t.now) svg.append(svgEl('text', { x, y: base + 58, 'text-anchor': 'middle', 'font-size': 12, 'font-weight': 700 }, 'Compra actual'));
+  });
+  svg.setAttribute('aria-label', 'Secuencia: ' + seq.map((t) => label(MERCHANTS, t.merchant_category) + ' ' + money(t.amount)).join(', '));
+}
+
+function select(options, value, onchange) {
+  const s = el('select', { onchange });
+  const keys = [...new Set([...Object.keys(options), value])];
+  for (const k of keys) s.append(el('option', { value: k, text: label(options, k), selected: k === value }));
+  return s;
+}
+function renderRows() {
+  const body = $('rows');
+  body.replaceChildren();
+  const rows = [...state.history.map((t, i) => ({ t, i })), { t: state.current, now: true }];
+  rows.forEach(({ t, i, now }, n) => {
+    const set = (key, parse = (v) => v) => (e) => { t[key] = parse(e.target.type === 'checkbox' ? e.target.checked : e.target.value); markEdited(); };
+    const time = el('input', { type: 'datetime-local', step: 1, value: toInput(t.timestamp), 'aria-label': 'Fecha y hora',
+      onchange: (e) => { if (!e.target.value) return; t.timestamp = fromInput(e.target.value); if (!now) { sortHistory(); renderRows(); } markEdited(); } });
+    const amount = el('input', { type: 'number', min: 0, step: '0.01', value: t.amount, 'aria-label': 'Monto en quetzales', oninput: set('amount') });
+    const intl = el('input', { type: 'checkbox', checked: !!t.is_international, 'aria-label': 'Internacional', onchange: set('is_international', (v) => (v ? 1 : 0)) });
+    const remove = now ? el('span') : el('button', { class: 'icon-btn', type: 'button', title: 'Quitar esta compra', 'aria-label': 'Quitar esta compra',
+      text: '×', onclick: () => { state.history.splice(i, 1); renderRows(); markEdited(); } });
+    body.append(el('tr', { class: now ? 'current' : '' },
+      el('td', {}, el('span', { class: 'tag' + (now ? ' now' : ''), text: now ? 'Actual' : 'Previa ' + (n + 1) })),
+      el('td', {}, time), el('td', {}, amount),
+      el('td', {}, select(MERCHANTS, t.merchant_category, set('merchant_category'))),
+      el('td', {}, select(CHANNELS, t.channel, set('channel'))),
+      el('td', {}, intl), el('td', {}, remove)));
+  });
+  $('add-row').disabled = state.history.length >= MAX_HISTORY;
+}
+
+function renderJson() { $('json').value = JSON.stringify(buildRequest(), null, 2); }
+
+function signals() {
+  const cur = state.current, hist = state.history, out = [];
+  const curT = parseTime(cur.timestamp);
+  const lastHour = hist.filter((t) => curT - parseTime(t.timestamp) <= 3600000 && curT >= parseTime(t.timestamp)).length;
+  if (lastHour) out.push(`${lastHour} ${lastHour === 1 ? 'compra' : 'compras'} en la hora anterior a la compra actual.`);
+  const base = state.histAvg !== '' ? Number(state.histAvg) : (hist.length ? hist.reduce((s, t) => s + Number(t.amount), 0) / hist.length : 0);
+  if (base > 0) {
+    const ratio = Number(cur.amount) / base;
+    out.push(`El monto actual es ${ratio >= 10 ? Math.round(ratio) : ratio.toFixed(1)} veces el promedio del cliente (${money(base)}).`);
+  }
+  const intl = hist.filter((t) => t.is_international).length + (cur.is_international ? 1 : 0);
+  out.push(`${intl} de ${hist.length + 1} compras de la secuencia son internacionales.`);
+  if (hist.length) {
+    const counts = {};
+    hist.forEach((t) => { counts[t.channel] = (counts[t.channel] || 0) + 1; });
+    const usual = Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
+    if (usual !== cur.channel) out.push(`Cambia de canal: suele usar ${label(CHANNELS, usual)} y ahora usa ${label(CHANNELS, cur.channel)}.`);
+  }
+  return out;
+}
+
+function verdict(decision) {
+  if (!state.example || state.edited) return null;
+  const fraud = state.example.truth === 'fraude';
+  if (decision === 'STEP_UP_AUTH') return [`En los datos, esta compra es ${fraud ? 'fraude' : 'legítima'}.`, ' El modelo duda y pide verificación al cliente.'];
+  const blocked = decision === 'BLOCK_TRANSACTION';
+  if (fraud && blocked) return ['Acierto:', ' era fraude y el modelo lo bloquea.'];
+  if (!fraud && !blocked) return ['Acierto:', ' era legítima y el modelo la aprueba.'];
+  if (fraud) return ['Error, fraude no detectado:', ' era fraude y el modelo la aprueba.'];
+  return ['Error, falso positivo:', ' era legítima y el modelo la bloquea.'];
+}
+
+function zoneMarker(score, review, block) {
+  const zones = [[0, review], [review, block], [block, 1]];
+  const z = score >= block ? 2 : score >= review ? 1 : 0;
+  const [lo, hi] = zones[z];
+  const frac = hi > lo ? Math.min(Math.max((score - lo) / (hi - lo), 0), 1) : 0;
+  return Math.min(Math.max(((z + frac) / 3) * 100, 4), 96);
+}
+
+function renderResult(r) {
+  const out = $('result');
+  const pos = zoneMarker(r.fraud_risk_score, r.review_threshold, r.block_threshold);
+  const v = verdict(r.decision);
+  const sig = signals();
+  out.replaceChildren(...[
+    el('div', { class: 'result-head' },
+      el('div', {}, el('p', { class: 'eyebrow', text: 'Acción sugerida' }), el('div', { class: 'decision ' + r.decision, text: DECISIONS[r.decision] || r.decision })),
+      el('div', { class: 'score' }, el('small', { text: 'Puntaje de riesgo (0 a 1)' }), formatScore(r.fraud_risk_score))),
+    el('div', { class: 'zones', role: 'img', 'aria-label': `Puntaje ${formatScore(r.fraud_risk_score)} en la zona ${DECISIONS[r.decision]}` },
+      el('div', { class: 'zone ok' }, el('b', { text: 'Aprobar' }), `menor que ${r.review_threshold}`),
+      el('div', { class: 'zone warn' }, el('b', { text: 'Verificar' }), `${r.review_threshold} a ${r.block_threshold}`),
+      el('div', { class: 'zone bad' }, el('b', { text: 'Bloquear' }), `desde ${r.block_threshold}`),
+      el('div', { class: 'marker', style: `left:${pos}%` }, el('span', { text: formatScore(r.fraud_risk_score) }), el('i'))),
+    el('p', { class: 'note', text: 'Cada zona ocupa el mismo ancho: la escala no es lineal.' }),
+    v ? el('div', { class: 'verdict' }, el('b', { text: v[0] }), v[1]) : null,
+    el('h2', { style: 'margin-top:20px;font-size:17px', text: 'Lo que muestra la secuencia' }),
+    el('p', { class: 'note', text: 'Es una descripción de los datos enviados, no la explicación del modelo.' }),
+    el('ul', { class: 'signals' }, sig.map((s) => el('li', { text: s }))),
+    el('div', { class: 'meta' },
+      el('span', { text: `Modelo ${String(r.model).toUpperCase()}` }),
+      el('span', { text: `${r.latency_ms.toFixed(2)} ms de cálculo` }),
+      el('span', { text: `Historial usado: ${r.history_used} de ${MAX_HISTORY}` })),
+    r.warnings.length ? el('ul', { class: 'signals note' }, r.warnings.map((w) => el('li', { text: w }))) : null,
+  ].filter(Boolean));
+}
+
+async function evaluate() {
+  const btn = $('evaluate');
+  btn.disabled = true;
+  $('result').replaceChildren(el('p', { class: 'note', text: 'Evaluando… si el servicio estaba dormido, puede tardar cerca de un minuto.' }));
+  try {
+    const r = await fetch('score', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(buildRequest()) });
+    const body = await r.json();
+    if (!r.ok) {
+      const detail = Array.isArray(body.detail) ? body.detail.map((d) => d.msg).join('; ') : body.detail;
+      $('result').replaceChildren(el('p', { class: 'error', text: `No se pudo evaluar (${r.status}): ${detail}` }));
+      return;
+    }
+    renderResult(body);
+  } catch (e) {
+    $('result').replaceChildren(el('p', { class: 'error', text: 'No se pudo contactar el servicio: ' + e.message }));
+  } finally { btn.disabled = false; }
+}
+
+$('evaluate').addEventListener('click', evaluate);
+$('reset').addEventListener('click', () => state.example && loadExample(state.example));
+$('add-row').addEventListener('click', () => {
+  if (state.history.length >= MAX_HISTORY) return;
+  const first = state.history[0] || state.current;
+  const t = new Date(parseTime(first.timestamp) - 3600000).toISOString().slice(0, 19) + 'Z';
+  state.history.unshift({ timestamp: t, amount: 250, merchant_category: 'SUPERMARKET', channel: 'POS', is_international: 0 });
+  renderRows(); markEdited();
+});
+$('hist-avg').addEventListener('input', (e) => { state.histAvg = e.target.value; markEdited(); });
+$('toggle-json').addEventListener('click', (e) => {
+  const box = $('json-box'), open = box.classList.toggle('hidden') === false;
+  e.target.setAttribute('aria-expanded', String(open));
+  e.target.textContent = open ? 'Ocultar JSON' : 'Ver JSON';
+});
+$('apply-json').addEventListener('click', () => {
+  $('json-error').textContent = '';
+  try {
+    const req = JSON.parse($('json').value);
+    if (!req.current_transaction) throw new Error('Falta current_transaction.');
+    loadExample({ ...(state.example || {}), request: req });
+    state.edited = true;
+    renderExamples();
+  } catch (e) { $('json-error').textContent = 'JSON no válido: ' + e.message; }
+});
+
+fetch('catalogo').then((r) => r.json()).then((catalog) => {
+  state.catalog = catalog;
+  loadExample(catalog.examples[0]);
+}).catch((e) => { $('result').replaceChildren(el('p', { class: 'error', text: 'No se pudo cargar el catálogo: ' + e.message })); });
+</script>
+</body>
+</html>

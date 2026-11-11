@@ -179,7 +179,7 @@ Respuesta:
 }
 ```
 
-`latency_ms` mide solo el cálculo de variables y del modelo, sin la red. `GET /ejemplos` devuelve dos peticiones de ejemplo; `GET /health` y `GET /stats` describen el estado del servicio, y `GET /logs.csv` descarga el registro de uso.
+`latency_ms` mide solo el cálculo de variables y del modelo, sin la red. `GET /` abre la página de demostración: dibuja la secuencia de compras, permite editarla y trae 9 ejemplos con puntajes distintos, incluidos un falso positivo y un fraude no detectado. `GET /ejemplos` devuelve esas peticiones y `GET /catalogo` las mismas con su contexto; `GET /health` y `GET /stats` describen el estado del servicio, y `GET /logs.csv` descarga el registro de uso.
 
 **Contrato de entrada.** `current_transaction` (obligatoria), `recent_history` (se recomiendan 6 transacciones previas, de más antigua a más reciente o en cualquier orden) y `aggregated_profile.hist_avg_amount` (opcional; si falta se estima con el historial recibido). Otros campos se ignoran. Si el historial tiene menos de 6 transacciones, la respuesta incluye una advertencia.
 
@@ -222,7 +222,8 @@ Sin `DATABASE_URL`, el registro de uso se guarda en `logs/requests.csv`.
 **Estructura**
 
 ```
-api.py                     API y página de demostración
+api.py                     API (FastAPI)
+web/                       página de demostración (index.html) y ejemplos (ejemplos.json)
 export_artifacts.py        verifica pesos y exporta el paquete de servicio
 fraude/features.py         datos sintéticos y pipeline (extraído del notebook sin cambios)
 fraude/models.py           arquitecturas A, B y C (extraído del notebook sin cambios)
