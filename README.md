@@ -31,9 +31,9 @@ Universidad del Valle · Deep Learning y Sistemas Inteligentes · 2026
 | Verificar pesos y métricas con `export_artifacts.py` | 8 nov | Jonathan Zacarías | Hecho |
 | Registro persistente, integración continua y publicación en Render | 8 nov | Diego López | Hecho |
 | Pruebas con personas ajenas y capturas | 13 nov | Todos | Hecho |
-| PDF de presentación y ensayo | [FECHA] | Todos | [ESTADO] |
+| PDF de presentación (`presentacion_final.pdf`) | 13 nov | Todos | Hecho |
 
-Presentación: 9 de noviembre. Entrega límite: 15 de noviembre, 23:59.
+Presentación: 9 o 13 de noviembre, según el sorteo. Entrega límite: 15 de noviembre, 23:59.
 
 ## 3. Supuestos
 
@@ -259,7 +259,11 @@ fraude/training.py         dataset, entrenamiento y métricas (extraído sin cam
 fraude/request_features.py variables de la API (NumPy), equivalentes al pipeline
 fraude/scoring.py          puntuación en línea
 fraude/request_log.py      registro de uso (Postgres o CSV local)
-tests/                     pruebas de equivalencia y de la API
+tests/                     pruebas de equivalencia, de la API y con los pesos reales
+ejemplo_normal.json        petición de ejemplo (se aprueba)
+ejemplo_sospechoso.json    petición de ejemplo (se bloquea)
+evidencias/                capturas del servicio, prueba con persona ajena y registro de uso
+presentacion_final.pdf     presentación
 scripts/smoke_test.py      prueba de extremo a extremo de un servicio en marcha
 render.yaml                configuración del servicio en Render
 .github/workflows/ci.yml   construye y prueba la imagen en cada cambio
