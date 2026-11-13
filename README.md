@@ -25,9 +25,9 @@ Universidad del Valle · Deep Learning y Sistemas Inteligentes · 2026
 
 | Etapa | Fecha | Responsable | Estado |
 |---|---|---|---|
-| Elegir el Proyecto 1 y revisar notebook y contrato | 7 nov | [NOMBRE] | Hecho |
-| Extraer el pipeline a un paquete y serializar escaladores y encoders | 7 nov | [NOMBRE] | Hecho |
-| API (FastAPI), política de decisión y registro de uso | 7 nov | [NOMBRE] | Hecho |
+| Elegir el Proyecto 1 y revisar notebook y contrato | 7 nov | Todos | Hecho |
+| Extraer el pipeline a un paquete y serializar escaladores y encoders | 7 nov | Todos | Hecho |
+| API (FastAPI), política de decisión y registro de uso | 7 nov | Todos | Hecho |
 | Verificar pesos y métricas con `export_artifacts.py` | 8 nov | Jonathan Zacarías | Hecho |
 | Registro persistente, integración continua y publicación en Render | 8 nov | Diego López | Hecho |
 | Pruebas con personas ajenas y capturas | 13 nov | Todos | Hecho |
