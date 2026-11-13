@@ -6,6 +6,7 @@ Universidad del Valle · Deep Learning y Sistemas Inteligentes · 2026
 
 **Servicio:** <https://fraude-api-t2ww.onrender.com> · **Presentación:** [`presentacion_final.pdf`](presentacion_final.pdf)
 **Modelo de origen:** Proyecto 1, *Monitoreo Transaccional* (notebook `proyecto1_monitoreo_transaccional.ipynb`).
+
 ---
 
 ## 1. Problemática
@@ -143,14 +144,25 @@ flowchart LR
 - *Operativo:* latencia p50, p95 y máxima, errores 4xx y 5xx.
 - *Deriva de puntajes:* proporción de transacciones enviadas a revisión o bloqueo y puntaje medio, contra lo observado en validación. Un cambio fuerte indica deriva de datos o de comportamiento.
 - *Integridad:* repetir `test_model_equivalence` y `export_artifacts.py` tras cualquier cambio de versión de librerías.
-- *Pendiente de producción real:* no hay etiquetas de fraude en tiempo real, así que no se puede medir AUC-PR en línea. Se necesitarían contracargos confirmados. [Definir umbrales de alerta y disparador de reentrenamiento.]
+- *Pendiente de producción real:* no hay etiquetas de fraude en tiempo real, así que no se puede medir AUC-PR en línea. Se necesitarían contracargos confirmados.
+
+**Umbrales de alerta propuestos** (referencia: en prueba, B aprueba el 90,2% y bloquea el 9,8%). Se calculan sobre las últimas 500 peticiones, sin contar las pruebas automáticas:
+
+| Señal | Alerta si |
+|---|---|
+| Proporción de revisión o bloqueo | sale del rango 5%–15% |
+| Proporción de autenticación reforzada | supera el 2% (en prueba fue 0,02%; un aumento indica puntajes menos saturados) |
+| Latencia del modelo (`latency_ms`), p95 | supera 25 ms (hoy 1,4 ms) |
+| Errores 5xx | más del 1% de las peticiones |
+
+**Disparador de reentrenamiento.** Una alerta de deriva que se mantenga 7 días seguidos, o, cuando haya contracargos confirmados, un recall menor que 95% o un costo semanal mayor que el de validación escalado al mismo volumen. Reentrenar implica volver a calibrar el umbral de revisión y repetir las pruebas de equivalencia antes de desplegar.
 
 ## 7. Evidencias del pase a producción
 
 - **Servicio:** <https://fraude-api-t2ww.onrender.com>, verificado el 8 de noviembre de 2026 a las 21:37, hora de Guatemala, con `scripts/smoke_test.py`.
 - **Capturas** (`evidencias/`): página de demostración con el ejemplo normal y el sospechoso, respuesta de `/health`, `/stats` tras varias peticiones, acceso desde un dispositivo ajeno al equipo.
 - **Registro de uso:** `evidencias/requests.csv`, descargado de `GET /logs.csv` [N peticiones, % por decisión, latencia p50 y p95].
-- **Pruebas:** `test_features_equivalence`, `test_model_equivalence` y `test_api` pasan. `export_artifacts.py` reproduce `metricas_completas.json`. La imagen de Docker pasa en [GitHub Actions](https://github.com/Zacatac23/ProyectoFinalDeepLearning/actions) con los límites de Render (0,1 CPU y 512 MB) y un Postgres de prueba. [AGREGAR CAPTURAS.]
+- **Pruebas:** `test_features_equivalence`, `test_model_equivalence`, `test_api` y `test_real_weights` pasan. La última carga los pesos reales de `serving/` y comprueba por HTTP que `ejemplo_normal.json` da `APPROVE` y `ejemplo_sospechoso.json` da `BLOCK_TRANSACTION`, con los tres modelos (puntajes 0,000000 y 0,999999 con B). `export_artifacts.py` reproduce `metricas_completas.json`. La imagen de Docker pasa en [GitHub Actions](https://github.com/Zacatac23/ProyectoFinalDeepLearning/actions) con los límites de Render (0,1 CPU y 512 MB) y un Postgres de prueba. [AGREGAR CAPTURAS.]
 - **Prueba con persona ajena al equipo:** [NOMBRE, FECHA, QUÉ HIZO].
 
 ---
@@ -197,6 +209,7 @@ python export_artifacts.py --weights-dir artefactos --out serving
 python -m tests.test_features_equivalence
 python -m tests.test_model_equivalence
 python -m tests.test_api
+python -m tests.test_real_weights
 
 # 3. Servicio local (http://localhost:8000)
 uvicorn api:app --port 8000
