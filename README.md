@@ -30,7 +30,7 @@ Universidad del Valle · Deep Learning y Sistemas Inteligentes · 2026
 | API (FastAPI), política de decisión y registro de uso | 7 nov | [NOMBRE] | Hecho |
 | Verificar pesos y métricas con `export_artifacts.py` | 8 nov | Jonathan Zacarías | Hecho |
 | Registro persistente, integración continua y publicación en Render | 8 nov | Diego López | Hecho |
-| Pruebas con personas ajenas y capturas | [FECHA] | Todos | [ESTADO] |
+| Pruebas con personas ajenas y capturas | 13 nov | Todos | Capturas hechas; falta la prueba con persona ajena |
 | PDF de presentación y ensayo | [FECHA] | Todos | [ESTADO] |
 
 Presentación: 9 de noviembre. Entrega límite: 15 de noviembre, 23:59.
@@ -160,9 +160,14 @@ flowchart LR
 ## 7. Evidencias del pase a producción
 
 - **Servicio:** <https://fraude-api-t2ww.onrender.com>, verificado el 8 de noviembre de 2026 a las 21:37, hora de Guatemala, con `scripts/smoke_test.py`.
-- **Capturas** (`evidencias/`): página de demostración con el ejemplo normal y el sospechoso, respuesta de `/health`, `/stats` tras varias peticiones, acceso desde un dispositivo ajeno al equipo.
+- **Capturas** (`evidencias/`, tomadas del servicio público el 13 de noviembre de 2026 a las 10:28, hora de Guatemala):
+  - `01_pagina_ejemplo_normal.png`: "Cliente habitual", puntaje 0,0000, **Aprobar**.
+  - `02_pagina_ejemplo_sospechoso.png`: "Sondeo y vaciado", puntaje > 0,9999, **Bloquear**, 1,00 ms de cálculo.
+  - `03_health.png`: `{"status":"ok","model":"b","review_threshold":0.01,"block_threshold":0.65}`.
+  - `04_stats.png`: 217 peticiones acumuladas, incluidas las pruebas automáticas; latencia del modelo p50 1,3 ms y p95 2,0 ms.
+  - [PENDIENTE: acceso desde un dispositivo ajeno al equipo.]
 - **Registro de uso:** `evidencias/requests.csv`, descargado de `GET /logs.csv` [N peticiones, % por decisión, latencia p50 y p95].
-- **Pruebas:** `test_features_equivalence`, `test_model_equivalence`, `test_api` y `test_real_weights` pasan. La última carga los pesos reales de `serving/` y comprueba por HTTP que `ejemplo_normal.json` da `APPROVE` y `ejemplo_sospechoso.json` da `BLOCK_TRANSACTION`, con los tres modelos (puntajes 0,000000 y 0,999999 con B). `export_artifacts.py` reproduce `metricas_completas.json`. La imagen de Docker pasa en [GitHub Actions](https://github.com/Zacatac23/ProyectoFinalDeepLearning/actions) con los límites de Render (0,1 CPU y 512 MB) y un Postgres de prueba. [AGREGAR CAPTURAS.]
+- **Pruebas:** `test_features_equivalence`, `test_model_equivalence`, `test_api` y `test_real_weights` pasan. La última carga los pesos reales de `serving/` y comprueba por HTTP que `ejemplo_normal.json` da `APPROVE` y `ejemplo_sospechoso.json` da `BLOCK_TRANSACTION`, con los tres modelos (puntajes 0,000000 y 0,999999 con B). `export_artifacts.py` reproduce `metricas_completas.json`. La imagen de Docker pasa en [GitHub Actions](https://github.com/Zacatac23/ProyectoFinalDeepLearning/actions) con los límites de Render (0,1 CPU y 512 MB) y un Postgres de prueba.
 - **Prueba con persona ajena al equipo:** [NOMBRE, FECHA, QUÉ HIZO].
 
 ---
