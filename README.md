@@ -30,7 +30,7 @@ Universidad del Valle · Deep Learning y Sistemas Inteligentes · 2026
 | API (FastAPI), política de decisión y registro de uso | 7 nov | [NOMBRE] | Hecho |
 | Verificar pesos y métricas con `export_artifacts.py` | 8 nov | Jonathan Zacarías | Hecho |
 | Registro persistente, integración continua y publicación en Render | 8 nov | Diego López | Hecho |
-| Pruebas con personas ajenas y capturas | 13 nov | Todos | Capturas hechas; falta la prueba con persona ajena |
+| Pruebas con personas ajenas y capturas | 13 nov | Todos | Hecho |
 | PDF de presentación y ensayo | [FECHA] | Todos | [ESTADO] |
 
 Presentación: 9 de noviembre. Entrega límite: 15 de noviembre, 23:59.
@@ -165,10 +165,17 @@ flowchart LR
   - `02_pagina_ejemplo_sospechoso.png`: "Sondeo y vaciado", puntaje > 0,9999, **Bloquear**, 1,00 ms de cálculo.
   - `03_health.png`: `{"status":"ok","model":"b","review_threshold":0.01,"block_threshold":0.65}`.
   - `04_stats.png`: 217 peticiones acumuladas, incluidas las pruebas automáticas; latencia del modelo p50 1,3 ms y p95 2,0 ms.
-  - [PENDIENTE: acceso desde un dispositivo ajeno al equipo.]
+  - `05` a `07` (`*_ajeno_*.png`): acceso desde la laptop de una persona ajena al equipo; ver el punto siguiente.
 - **Registro de uso:** `evidencias/requests.csv`, descargado de `GET /logs.csv` [N peticiones, % por decisión, latencia p50 y p95].
 - **Pruebas:** `test_features_equivalence`, `test_model_equivalence`, `test_api` y `test_real_weights` pasan. La última carga los pesos reales de `serving/` y comprueba por HTTP que `ejemplo_normal.json` da `APPROVE` y `ejemplo_sospechoso.json` da `BLOCK_TRANSACTION`, con los tres modelos (puntajes 0,000000 y 0,999999 con B). `export_artifacts.py` reproduce `metricas_completas.json`. La imagen de Docker pasa en [GitHub Actions](https://github.com/Zacatac23/ProyectoFinalDeepLearning/actions) con los límites de Render (0,1 CPU y 512 MB) y un Postgres de prueba.
-- **Prueba con persona ajena al equipo:** [NOMBRE, FECHA, QUÉ HIZO].
+- **Prueba con persona ajena al equipo:** Mateo Sandoval, 13 de noviembre de 2026 por la mañana, en su laptop (Windows 11, Google Chrome). Solo se le dijo que era un sistema de un banco que decide si una compra con tarjeta es fraude.
+  - *Qué hizo:* evaluó "Cliente habitual" (Aprobar, puntaje 0,0000) y "Sondeo y vaciado" (Bloquear, > 0,9999). En este último bajó el monto de la compra actual de Q4 500 a Q100,54, quitó la marca de internacional y volvió a evaluar: el sistema la aprobó con puntaje 0,0000. Capturas `05`, `06` y `07`.
+  - *Qué entendió:* que el verde significa que la compra se parece a lo que el cliente gasta normalmente, y por qué se bloqueó la segunda (varias compras en una hora, monto alto y fuera del país). Notó que al bajar el monto la misma compra pasa.
+  - *Qué le confundió:* el nombre "Sondeo y vaciado" le pareció técnico hasta ver el resultado. El mensaje "Acierto: era fraude y el modelo lo bloquea" le hizo dudar si la respuesta estaba programada de antemano o si se calculaba en ese momento. Y la frase "no es la explicación del modelo" le pareció contradictoria, porque justo debajo se listan motivos.
+  - *Lo que sacamos de la prueba:*
+    - La página debería aclarar que la etiqueta "Acierto" compara con la respuesta conocida del dato sintético y que el puntaje sí se calcula en el momento.
+    - Los nombres de los ejemplos necesitan una explicación corta.
+    - El cambio que hizo muestra algo del modelo: con los mismos 4 cargos pequeños en una hora, la compra final se aprueba si es pequeña y nacional. El sondeo por sí solo no basta para que B la marque.
 
 ---
 
