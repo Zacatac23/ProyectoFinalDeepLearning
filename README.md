@@ -99,7 +99,7 @@ Resultados en prueba con los pesos de `artefactos/`. `export_artifacts.py` los r
 
 ### 5.2 Hipótesis de servicio
 
-Criterios [FIJAR ANTES DE MEDIR y conservar la fecha]:
+Origen de los criterios: la latencia viene del contrato original del Proyecto 1. Las tolerancias de equivalencia (1e-5 y 1e-4) están en el código de las pruebas desde el 7 de noviembre, antes de correrlas. El umbral de AUC-PR (≤ 0,02) se fijó el 8 de noviembre junto con la medición, así que no se presenta como fijado de antemano.
 
 | Hipótesis | Métrica | Criterio de éxito | Resultado |
 |---|---|---|---|
