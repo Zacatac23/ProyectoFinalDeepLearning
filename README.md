@@ -6,6 +6,7 @@ Universidad del Valle · Deep Learning y Sistemas Inteligentes · 2026
 
 **Servicio:** <https://fraude-api-t2ww.onrender.com> · **Presentación:** [`presentacion_final.pdf`](presentacion_final.pdf)
 **Modelo de origen:** Proyecto 1, *Monitoreo Transaccional* (notebook `proyecto1_monitoreo_transaccional.ipynb`).
+
 ---
 
 ## 1. Problemática
@@ -24,15 +25,15 @@ Universidad del Valle · Deep Learning y Sistemas Inteligentes · 2026
 
 | Etapa | Fecha | Responsable | Estado |
 |---|---|---|---|
-| Elegir el Proyecto 1 y revisar notebook y contrato | 7 nov | [NOMBRE] | Hecho |
-| Extraer el pipeline a un paquete y serializar escaladores y encoders | 7 nov | [NOMBRE] | Hecho |
-| API (FastAPI), política de decisión y registro de uso | 7 nov | [NOMBRE] | Hecho |
+| Elegir el Proyecto 1 y revisar notebook y contrato | 7 nov | Todos | Hecho |
+| Extraer el pipeline a un paquete y serializar escaladores y encoders | 7 nov | Todos | Hecho |
+| API (FastAPI), política de decisión y registro de uso | 7 nov | Todos | Hecho |
 | Verificar pesos y métricas con `export_artifacts.py` | 8 nov | Jonathan Zacarías | Hecho |
 | Registro persistente, integración continua y publicación en Render | 8 nov | Diego López | Hecho |
-| Pruebas con personas ajenas y capturas | [FECHA] | Todos | [ESTADO] |
-| PDF de presentación y ensayo | [FECHA] | Todos | [ESTADO] |
+| Pruebas con personas ajenas y capturas | 13 nov | Todos | Hecho |
+| PDF de presentación (`presentacion_final.pdf`) | 13 nov | Todos | Hecho |
 
-Presentación: 9 de noviembre. Entrega límite: 15 de noviembre, 23:59.
+Presentación: 9 o 13 de noviembre, según el sorteo. Entrega límite: 15 de noviembre, 23:59.
 
 ## 3. Supuestos
 
@@ -98,7 +99,7 @@ Resultados en prueba con los pesos de `artefactos/`. `export_artifacts.py` los r
 
 ### 5.2 Hipótesis de servicio
 
-Criterios [FIJAR ANTES DE MEDIR y conservar la fecha]:
+Origen de los criterios: la latencia viene del contrato original del Proyecto 1. Las tolerancias de equivalencia (1e-5 y 1e-4) están en el código de las pruebas desde el 7 de noviembre, antes de correrlas. El umbral de AUC-PR (≤ 0,02) se fijó el 8 de noviembre junto con la medición, así que no se presenta como fijado de antemano.
 
 | Hipótesis | Métrica | Criterio de éxito | Resultado |
 |---|---|---|---|
@@ -143,15 +144,41 @@ flowchart LR
 - *Operativo:* latencia p50, p95 y máxima, errores 4xx y 5xx.
 - *Deriva de puntajes:* proporción de transacciones enviadas a revisión o bloqueo y puntaje medio, contra lo observado en validación. Un cambio fuerte indica deriva de datos o de comportamiento.
 - *Integridad:* repetir `test_model_equivalence` y `export_artifacts.py` tras cualquier cambio de versión de librerías.
-- *Pendiente de producción real:* no hay etiquetas de fraude en tiempo real, así que no se puede medir AUC-PR en línea. Se necesitarían contracargos confirmados. [Definir umbrales de alerta y disparador de reentrenamiento.]
+- *Pendiente de producción real:* no hay etiquetas de fraude en tiempo real, así que no se puede medir AUC-PR en línea. Se necesitarían contracargos confirmados.
+
+**Umbrales de alerta propuestos** (referencia: en prueba, B aprueba el 90,2% y bloquea el 9,8%). Se calculan sobre las últimas 500 peticiones, sin contar las pruebas automáticas:
+
+| Señal | Alerta si |
+|---|---|
+| Proporción de revisión o bloqueo | sale del rango 5%–15% |
+| Proporción de autenticación reforzada | supera el 2% (en prueba fue 0,02%; un aumento indica puntajes menos saturados) |
+| Latencia del modelo (`latency_ms`), p95 | supera 25 ms (hoy 1,4 ms) |
+| Errores 5xx | más del 1% de las peticiones |
+
+**Disparador de reentrenamiento.** Una alerta de deriva que se mantenga 7 días seguidos, o, cuando haya contracargos confirmados, un recall menor que 95% o un costo semanal mayor que el de validación escalado al mismo volumen. Reentrenar implica volver a calibrar el umbral de revisión y repetir las pruebas de equivalencia antes de desplegar.
 
 ## 7. Evidencias del pase a producción
 
 - **Servicio:** <https://fraude-api-t2ww.onrender.com>, verificado el 8 de noviembre de 2026 a las 21:37, hora de Guatemala, con `scripts/smoke_test.py`.
-- **Capturas** (`evidencias/`): página de demostración con el ejemplo normal y el sospechoso, respuesta de `/health`, `/stats` tras varias peticiones, acceso desde un dispositivo ajeno al equipo.
-- **Registro de uso:** `evidencias/requests.csv`, descargado de `GET /logs.csv` [N peticiones, % por decisión, latencia p50 y p95].
-- **Pruebas:** `test_features_equivalence`, `test_model_equivalence` y `test_api` pasan. `export_artifacts.py` reproduce `metricas_completas.json`. La imagen de Docker pasa en [GitHub Actions](https://github.com/Zacatac23/ProyectoFinalDeepLearning/actions) con los límites de Render (0,1 CPU y 512 MB) y un Postgres de prueba. [AGREGAR CAPTURAS.]
-- **Prueba con persona ajena al equipo:** [NOMBRE, FECHA, QUÉ HIZO].
+- **Capturas** (`evidencias/`, tomadas del servicio público el 13 de noviembre de 2026 a las 10:28, hora de Guatemala):
+  - `01_pagina_ejemplo_normal.png`: "Cliente habitual", puntaje 0,0000, **Aprobar**.
+  - `02_pagina_ejemplo_sospechoso.png`: "Sondeo y vaciado", puntaje > 0,9999, **Bloquear**, 1,00 ms de cálculo.
+  - `03_health.png`: `{"status":"ok","model":"b","review_threshold":0.01,"block_threshold":0.65}`.
+  - `04_stats.png`: 217 peticiones acumuladas, incluidas las pruebas automáticas; latencia del modelo p50 1,3 ms y p95 2,0 ms.
+  - `05` a `07` (`*_ajeno_*.png`): acceso desde la laptop de una persona ajena al equipo; ver el punto siguiente.
+- **Registro de uso:** `evidencias/requests.csv`, descargado de `GET /logs.csv` el 13 de noviembre de 2026 a las 10:51, hora de Guatemala. Tiene 247 filas. Las primeras 178 (8 de noviembre, 21:05 a 21:37) son pruebas automáticas del despliegue, incluidas corridas con el modelo C, y no se cuentan como uso.
+  - *Uso real* (filas 179 a 247, del 8 al 13 de noviembre, todas con el modelo B): **69 peticiones**. Aprobar 27 (39,1%), autenticación reforzada 13 (18,8%) y bloquear 29 (42,0%). Todas llegaron con 6 transacciones de historial.
+  - *Latencia del modelo* (`latency_ms`, sin la red): p50 1,24 ms, p95 5,34 ms, máximo 390 ms en una petición tras despertar el servicio.
+  - La proporción de bloqueos (42%) es mucho mayor que el 9,8% de prueba porque casi todo el uso fue la página de demostración, cuyos ejemplos se eligieron para mostrar las tres decisiones. No es una señal de deriva.
+- **Pruebas:** `test_features_equivalence`, `test_model_equivalence`, `test_api` y `test_real_weights` pasan. La última carga los pesos reales de `serving/` y comprueba por HTTP que `ejemplo_normal.json` da `APPROVE` y `ejemplo_sospechoso.json` da `BLOCK_TRANSACTION`, con los tres modelos (puntajes 0,000000 y 0,999999 con B). `export_artifacts.py` reproduce `metricas_completas.json`. La imagen de Docker pasa en [GitHub Actions](https://github.com/Zacatac23/ProyectoFinalDeepLearning/actions) con los límites de Render (0,1 CPU y 512 MB) y un Postgres de prueba.
+- **Prueba con persona ajena al equipo:** Mateo Sandoval, 13 de noviembre de 2026 por la mañana, en su laptop (Windows 11, Google Chrome). Solo se le dijo que era un sistema de un banco que decide si una compra con tarjeta es fraude.
+  - *Qué hizo:* evaluó "Cliente habitual" (Aprobar, puntaje 0,0000) y "Sondeo y vaciado" (Bloquear, > 0,9999). En este último bajó el monto de la compra actual de Q4 500 a Q100,54, quitó la marca de internacional y volvió a evaluar: el sistema la aprobó con puntaje 0,0000. Capturas `05`, `06` y `07`.
+  - *Qué entendió:* que el verde significa que la compra se parece a lo que el cliente gasta normalmente, y por qué se bloqueó la segunda (varias compras en una hora, monto alto y fuera del país). Notó que al bajar el monto la misma compra pasa.
+  - *Qué le confundió:* el nombre "Sondeo y vaciado" le pareció técnico hasta ver el resultado. El mensaje "Acierto: era fraude y el modelo lo bloquea" le hizo dudar si la respuesta estaba programada de antemano o si se calculaba en ese momento. Y la frase "no es la explicación del modelo" le pareció contradictoria, porque justo debajo se listan motivos.
+  - *Lo que sacamos de la prueba:*
+    - La página debería aclarar que la etiqueta "Acierto" compara con la respuesta conocida del dato sintético y que el puntaje sí se calcula en el momento.
+    - Los nombres de los ejemplos necesitan una explicación corta.
+    - El cambio que hizo muestra algo del modelo: con los mismos 4 cargos pequeños en una hora, la compra final se aprueba si es pequeña y nacional. El sondeo por sí solo no basta para que B la marque.
 
 ---
 
@@ -197,6 +224,7 @@ python export_artifacts.py --weights-dir artefactos --out serving
 python -m tests.test_features_equivalence
 python -m tests.test_model_equivalence
 python -m tests.test_api
+python -m tests.test_real_weights
 
 # 3. Servicio local (http://localhost:8000)
 uvicorn api:app --port 8000
@@ -231,7 +259,11 @@ fraude/training.py         dataset, entrenamiento y métricas (extraído sin cam
 fraude/request_features.py variables de la API (NumPy), equivalentes al pipeline
 fraude/scoring.py          puntuación en línea
 fraude/request_log.py      registro de uso (Postgres o CSV local)
-tests/                     pruebas de equivalencia y de la API
+tests/                     pruebas de equivalencia, de la API y con los pesos reales
+ejemplo_normal.json        petición de ejemplo (se aprueba)
+ejemplo_sospechoso.json    petición de ejemplo (se bloquea)
+evidencias/                capturas del servicio, prueba con persona ajena y registro de uso
+presentacion_final.pdf     presentación
 scripts/smoke_test.py      prueba de extremo a extremo de un servicio en marcha
 render.yaml                configuración del servicio en Render
 .github/workflows/ci.yml   construye y prueba la imagen en cada cambio

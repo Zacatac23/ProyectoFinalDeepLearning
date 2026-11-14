@@ -1,0 +1,58 @@
+{
+  "client_id": "CLI_0142",
+  "current_transaction": {
+    "tx_id": "DEMO_SONDEO",
+    "timestamp": "2026-03-31T14:23:10Z",
+    "amount": 4500.0,
+    "merchant_category": "LUXURY_JEWELRY",
+    "channel": "ONLINE",
+    "is_international": 1
+  },
+  "recent_history": [
+    {
+      "timestamp": "2026-03-30T13:30:00Z",
+      "amount": 265.0,
+      "merchant_category": "SUPERMARKET",
+      "channel": "POS",
+      "is_international": 0
+    },
+    {
+      "timestamp": "2026-03-31T09:00:00Z",
+      "amount": 210.0,
+      "merchant_category": "SUPERMARKET",
+      "channel": "POS",
+      "is_international": 0
+    },
+    {
+      "timestamp": "2026-03-31T14:08:00Z",
+      "amount": 9.5,
+      "merchant_category": "DIGITAL_SERVICE",
+      "channel": "ONLINE",
+      "is_international": 1
+    },
+    {
+      "timestamp": "2026-03-31T14:12:00Z",
+      "amount": 12.0,
+      "merchant_category": "DIGITAL_SERVICE",
+      "channel": "ONLINE",
+      "is_international": 1
+    },
+    {
+      "timestamp": "2026-03-31T14:16:00Z",
+      "amount": 15.0,
+      "merchant_category": "DIGITAL_SERVICE",
+      "channel": "ONLINE",
+      "is_international": 1
+    },
+    {
+      "timestamp": "2026-03-31T14:20:00Z",
+      "amount": 18.0,
+      "merchant_category": "DIGITAL_SERVICE",
+      "channel": "ONLINE",
+      "is_international": 1
+    }
+  ],
+  "aggregated_profile": {
+    "hist_avg_amount": 260.0
+  }
+}

@@ -54,3 +54,4 @@ jobs:
           python -m tests.test_features_equivalence
           python -m tests.test_model_equivalence
           python -m tests.test_api
+          python -m tests.test_real_weights
