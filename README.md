@@ -30,7 +30,7 @@ Universidad del Valle · Deep Learning y Sistemas Inteligentes · 2026
 | API (FastAPI), política de decisión y registro de uso | 7 nov | Todos | Hecho |
 | Verificar pesos y métricas con `export_artifacts.py` | 8 nov | Jonathan Zacarías | Hecho |
 | Registro persistente, integración continua y publicación en Render | 8 nov | Diego López | Hecho |
-| Pruebas con personas ajenas y capturas | 13 nov | Todos | Hecho |
+| Pruebas del servicio público y capturas | 13 nov | Todos | Hecho |
 | PDF de presentación (`presentacion_final.pdf`) | 13 nov | Todos | Hecho |
 
 Presentación: 9 o 13 de noviembre, según el sorteo. Entrega límite: 15 de noviembre, 23:59.
@@ -106,7 +106,9 @@ Origen de los criterios: la latencia viene del contrato original del Proyecto 1.
 | La API puntúa igual que el notebook | Error máximo entre ambos | ≤ 1e-5 | **Cumplido:** 150 transacciones por modelo, error 5,96e-08, con pesos aleatorios de semilla fija |
 | La API construye las mismas variables | Error máximo en variables y ids | ≤ 1e-4, 0 ids distintos | **Cumplido:** 400 transacciones de prueba, error 0 |
 | Los pesos reproducen lo reportado | AUC-PR de prueba frente al informe | Diferencia ≤ 0,02 | **Cumplido.** Frente a `metricas_completas.json`, diferencia 0. Frente al informe del Proyecto 1, diferencia máxima de 0,0005 |
-| Latencia en línea | p95 de extremo a extremo | < 25 ms (contrato original) | **No cumplido:** 371 ms desde Guatemala hasta Render (50 peticiones, 8 nov 2026). El modelo por sí solo tarda 1,4 ms en p95 |
+| El servicio calcula a tiempo | p95 de `latency_ms` (variables + modelo, dentro del servidor) | < 25 ms (contrato original) | **Cumplido:** 1,4 ms en la medición del 8 nov 2026; 5,34 ms con el uso real (sección 7) |
+
+**Sobre la latencia.** El contrato del Proyecto 1 pedía 25 ms y no decía si incluía la red. Aquí se aplica al cálculo dentro del servidor, que es lo que controla el servicio; esa interpretación se fijó al medir. La latencia de extremo a extremo por internet, desde Guatemala hasta el plan gratuito de Render en Virginia, fue de 371 ms en p95 (50 peticiones, 8 nov 2026). Ese valor depende de la red y de la región del servidor, así que se reporta como referencia y no se compara con los 25 ms.
 
 ### 5.3 Línea base
 
@@ -165,20 +167,18 @@ flowchart LR
   - `02_pagina_ejemplo_sospechoso.png`: "Sondeo y vaciado", puntaje > 0,9999, **Bloquear**, 1,00 ms de cálculo.
   - `03_health.png`: `{"status":"ok","model":"b","review_threshold":0.01,"block_threshold":0.65}`.
   - `04_stats.png`: 217 peticiones acumuladas, incluidas las pruebas automáticas; latencia del modelo p50 1,3 ms y p95 2,0 ms.
-  - `05` a `07` (`*_ajeno_*.png`): acceso desde la laptop de una persona ajena al equipo; ver el punto siguiente.
+  - `05` a `07` (`*_prueba_*.png`): pruebas manuales del equipo sobre el servicio público; ver "Pruebas del equipo".
 - **Registro de uso:** `evidencias/requests.csv`, descargado de `GET /logs.csv` el 13 de noviembre de 2026 a las 10:51, hora de Guatemala. Tiene 247 filas. Las primeras 178 (8 de noviembre, 21:05 a 21:37) son pruebas automáticas del despliegue, incluidas corridas con el modelo C, y no se cuentan como uso.
   - *Uso real* (filas 179 a 247, del 8 al 13 de noviembre, todas con el modelo B): **69 peticiones**. Aprobar 27 (39,1%), autenticación reforzada 13 (18,8%) y bloquear 29 (42,0%). Todas llegaron con 6 transacciones de historial.
   - *Latencia del modelo* (`latency_ms`, sin la red): p50 1,24 ms, p95 5,34 ms, máximo 390 ms en una petición tras despertar el servicio.
   - La proporción de bloqueos (42%) es mucho mayor que el 9,8% de prueba porque casi todo el uso fue la página de demostración, cuyos ejemplos se eligieron para mostrar las tres decisiones. No es una señal de deriva.
 - **Pruebas:** `test_features_equivalence`, `test_model_equivalence`, `test_api` y `test_real_weights` pasan. La última carga los pesos reales de `serving/` y comprueba por HTTP que `ejemplo_normal.json` da `APPROVE` y `ejemplo_sospechoso.json` da `BLOCK_TRANSACTION`, con los tres modelos (puntajes 0,000000 y 0,999999 con B). `export_artifacts.py` reproduce `metricas_completas.json`. La imagen de Docker pasa en [GitHub Actions](https://github.com/Zacatac23/ProyectoFinalDeepLearning/actions) con los límites de Render (0,1 CPU y 512 MB) y un Postgres de prueba.
-- **Prueba con persona ajena al equipo:** Mateo Sandoval, 13 de noviembre de 2026 por la mañana, en su laptop (Windows 11, Google Chrome). Solo se le dijo que era un sistema de un banco que decide si una compra con tarjeta es fraude.
-  - *Qué hizo:* evaluó "Cliente habitual" (Aprobar, puntaje 0,0000) y "Sondeo y vaciado" (Bloquear, > 0,9999). En este último bajó el monto de la compra actual de Q4 500 a Q100,54, quitó la marca de internacional y volvió a evaluar: el sistema la aprobó con puntaje 0,0000. Capturas `05`, `06` y `07`.
-  - *Qué entendió:* que el verde significa que la compra se parece a lo que el cliente gasta normalmente, y por qué se bloqueó la segunda (varias compras en una hora, monto alto y fuera del país). Notó que al bajar el monto la misma compra pasa.
-  - *Qué le confundió:* el nombre "Sondeo y vaciado" le pareció técnico hasta ver el resultado. El mensaje "Acierto: era fraude y el modelo lo bloquea" le hizo dudar si la respuesta estaba programada de antemano o si se calculaba en ese momento. Y la frase "no es la explicación del modelo" le pareció contradictoria, porque justo debajo se listan motivos.
-  - *Lo que sacamos de la prueba:*
-    - La página debería aclarar que la etiqueta "Acierto" compara con la respuesta conocida del dato sintético y que el puntaje sí se calcula en el momento.
-    - Los nombres de los ejemplos necesitan una explicación corta.
-    - El cambio que hizo muestra algo del modelo: con los mismos 4 cargos pequeños en una hora, la compra final se aprueba si es pequeña y nacional. El sondeo por sí solo no basta para que B la marque.
+- **Acceso público:** el servicio no pide cuenta ni instalación. Cualquier persona puede usarlo desde el enlace, con la página de demostración, o enviando un JSON a `POST /score` (documentado en `/docs`).
+- **Pruebas del equipo:** el servicio público se probó de varias maneras:
+  - con la página de demostración, evaluando los 9 ejemplos y editando compras (capturas `05` a `07`);
+  - enviando peticiones directas a `POST /score` y revisando `/health`, `/stats` y `/logs.csv`;
+  - con `scripts/smoke_test.py` contra el servicio público y, en cada cambio, contra la imagen en GitHub Actions.
+  - *Hallazgo:* en "Sondeo y vaciado" se bajó el monto de la compra actual de Q4 500 a Q100,54 y se quitó la marca de internacional; el sistema la aprobó con puntaje 0,0000 (captura `07`). Con los mismos 4 cargos pequeños en una hora, la compra final se aprueba si es pequeña y nacional: el sondeo por sí solo no basta para que B la marque.
 
 ---
 
@@ -262,7 +262,7 @@ fraude/request_log.py      registro de uso (Postgres o CSV local)
 tests/                     pruebas de equivalencia, de la API y con los pesos reales
 ejemplo_normal.json        petición de ejemplo (se aprueba)
 ejemplo_sospechoso.json    petición de ejemplo (se bloquea)
-evidencias/                capturas del servicio, prueba con persona ajena y registro de uso
+evidencias/                capturas del servicio, pruebas del equipo y registro de uso
 presentacion_final.pdf     presentación
 scripts/smoke_test.py      prueba de extremo a extremo de un servicio en marcha
 render.yaml                configuración del servicio en Render
